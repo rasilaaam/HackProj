@@ -147,6 +147,10 @@ result-*
 data/diet.db
 data/raw/
 data/raw/**/*
+# EXCEPT: verified IFCT 2017 CSV
+!data/raw/ifct2017/
+!data/raw/ifct2017/2.0.0/
+!data/raw/ifct2017/2.0.0/index.csv
 
 # Build artifacts
 dist/

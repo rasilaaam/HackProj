@@ -47,6 +47,9 @@
 *.tar binary
 *.7z binary
 
+# Raw data files (preserve exact bytes)
+data/raw/** -text
+
 # Images
 *.jpg binary
 *.jpeg binary
