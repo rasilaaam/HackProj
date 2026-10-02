@@ -1,123 +1,1188 @@
-# IFCT 2017 Nutrient Column Mapping - Phase 1 Verified
-# csv_col: [book_code, table, printed_unit, canonical_unit, factor]
-water: [WATER, 1, g, g, 1.0]
-ash: [ASH, 1, g, g, 1.0]
-fatce: [FATCE, 1, g, g, 1.0]
-fibtg: [FIBTG, 1, g, g, 1.0]
-fibins: [FIBINS, 1, g, g, 1.0]
-fibsol: [FIBSOL, 1, g, g, 1.0]
-choavldf: [CHOAVLDF, 1, g, g, 1.0]
-protcnt: [PROTCNT, 1, g, g, 1.0]
-enerc: [ENERC, 1, kJ, kcal, 0.2388]
-thia: [THIA, 2, mg, mg, 1.0]
-ribf: [RIBF, 2, mg, mg, 1.0]
-nia: [NIA, 2, mg, mg, 1.0]
-pantac: [PANTAC, 2, mg, mg, 1.0]
-vitb6c: [VITB6A, 2, mg, mg, 1.0]
-biot: [BIOT, 2, ug, ug, 1.0]
-folsum: [FOLSUM, 2, ug, ug, 1.0]
-vitc: [VITC, 2, mg, mg, 1.0]
-ergcal: [ERGCAL, 3, ug, ug, 1.0]
-tocpha: [TOCPHA, 3, mg, mg, 1.0]
-tocphb: [TOCPHB, 3, mg, mg, 1.0]
-tocphg: [TOCPHG, 3, mg, mg, 1.0]
-tocphd: [TOCPHD, 3, mg, mg, 1.0]
-toctra: [TOCTRA, 3, mg, mg, 1.0]
-toctrb: [TOCTRB, 3, mg, mg, 1.0]
-toctrg: [TOCTRG, 3, mg, mg, 1.0]
-toctrd: [TOCTRD, 3, mg, mg, 1.0]
-vite: [VITE, 3, mg, mg, 1.0]
-vitk1: [VITK1, 3, ug, ug, 1.0]
-lutn: [LUTN, 4, ug, ug, 1.0]
-zea: [ZEA, 4, ug, ug, 1.0]
-lycpn: [LYCPN, 4, ug, ug, 1.0]
-crypxb: [CRYPXB, 4, ug, ug, 1.0]
-cartg: [CARTG, 4, ug, ug, 1.0]
-carta: [CARTA, 4, ug, ug, 1.0]
-cartb: [CARTB, 4, ug, ug, 1.0]
-cartoid: [CARTOID, 4, ug, ug, 1.0]
-al: [AL, 5, mg, mg, 1.0]
-as: [AS, 5, ug, ug, 1.0]
-cd: [CD, 5, mg, mg, 1.0]
-ca: [CA, 5, g, mg, 1000.0]
-cr: [CR, 5, mg, mg, 1.0]
-co: [CO, 5, mg, mg, 1.0]
-cu: [CU, 5, mg, mg, 1.0]
-fe: [FE, 5, mg, mg, 1.0]
-pb: [PB, 5, mg, mg, 1.0]
-li: [LI, 5, mg, mg, 1.0]
-mg: [MG, 5, mg, mg, 1.0]
-mn: [MN, 5, mg, mg, 1.0]
-hg: [HG, 5, ug, ug, 1.0]
-mo: [MO, 5, mg, mg, 1.0]
-ni: [NI, 5, mg, mg, 1.0]
-p: [P, 5, g, mg, 1000.0]
-k: [K, 5, g, mg, 1000.0]
-se: [SE, 5, ug, ug, 1.0]
-na: [NA, 5, g, mg, 1000.0]
-zn: [ZN, 5, mg, mg, 1.0]
-starch: [STARCH, 6, g, g, 1.0]
-frus: [FRUS, 6, g, g, 1.0]
-glus: [GLUS, 6, g, g, 1.0]
-sucs: [SUCS, 6, g, g, 1.0]
-mals: [MALS, 6, g, g, 1.0]
-lactose: [LACTOSE, 6, g, g, 1.0]
-f4d0: [F4D0, 7, mg, mg, 1.0]
-f6d0: [F6D0, 7, mg, mg, 1.0]
-f8d0: [F8D0, 7, mg, mg, 1.0]
-f10d0: [F10D0, 7, mg, mg, 1.0]
-f12d0: [F12D0, 7, mg, mg, 1.0]
-f14d0: [F14D0, 7, mg, mg, 1.0]
-f16d0: [F16D0, 7, mg, mg, 1.0]
-f18d0: [F18D0, 7, mg, mg, 1.0]
-f20d0: [F20D0, 7, mg, mg, 1.0]
-f22d0: [F22D0, 7, mg, mg, 1.0]
-f24d0: [F24D0, 7, mg, mg, 1.0]
-f14d1cn5: [F14D1CN5, 7, mg, mg, 1.0]
-f16d1cn7: [F16D1CN7, 7, mg, mg, 1.0]
-f18d1cn9: [F18D1CN9, 7, mg, mg, 1.0]
-f20d1cn9: [F20D1CN9, 7, mg, mg, 1.0]
-f22d1cn9: [F22D1CN9, 7, mg, mg, 1.0]
-f24d1cn9: [F24D1CN9, 7, mg, mg, 1.0]
-f18d2cn6: [F18D2CN6, 7, mg, mg, 1.0]
-f20d2n6: [F20D2N6, 7, mg, mg, 1.0]
-f18d3n3: [F18D3N3, 7, mg, mg, 1.0]
-f20d4n6: [F20D4N6, 7, mg, mg, 1.0]
-f11d0: [F11D0, 7, mg, mg, 1.0]
-f15d0: [F15D0, 7, mg, mg, 1.0]
-f20d3n6: [F20D3N6, 7, mg, mg, 1.0]
-f20d5n3: [F20D5N3, 7, mg, mg, 1.0]
-f22d6n3: [F22D6N3, 7, mg, mg, 1.0]
-f22d2n6: [F22D2N6, 7, mg, mg, 1.0]
-f22d5n3: [F22D5N3, 7, mg, mg, 1.0]
-fasat: [FASAT, 7, mg, mg, 1.0]
-fams: [FAMS, 7, mg, mg, 1.0]
-fapu: [FAPU, 7, mg, mg, 1.0]
-his: [HIS, 8, g, g, 1.0]
-ile: [ILE, 8, g, g, 1.0]
-leu: [LEU, 8, g, g, 1.0]
-lys: [LYS, 8, g, g, 1.0]
-met: [MET, 8, g, g, 1.0]
-cys: [CYS, 8, g, g, 1.0]
-phe: [PHE, 8, g, g, 1.0]
-thr: [THR, 8, g, g, 1.0]
-trp: [TRP, 8, g, g, 1.0]
-val: [VAL, 8, g, g, 1.0]
-ala: [ALA, 8, g, g, 1.0]
-arg: [ARG, 8, g, g, 1.0]
-asp: [ASP, 8, g, g, 1.0]
-glu: [GLU, 8, g, g, 1.0]
-gly: [GLY, 8, g, g, 1.0]
-pro: [PRO, 8, g, g, 1.0]
-ser: [SER, 8, g, g, 1.0]
-tyr: [TYR, 8, g, g, 1.0]
-oxalt: [OXALT, 9, mg, mg, 1.0]
-oxals: [OXALS, 9, mg, mg, 1.0]
-oxali: [OXALI, 9, mg, mg, 1.0]
-caconac: [CACONAC, 9, mg, mg, 1.0]
-citac: [CITAC, 9, mg, mg, 1.0]
-fumac: [FUMAC, 9, mg, mg, 1.0]
-malac: [MALAC, 9, mg, mg, 1.0]
-quinac: [QUINAC, 9, mg, mg, 1.0]
-sucac: [SUCAC, 9, mg, mg, 1.0]
-tarac: [TARAC, 9, mg, mg, 1.0]
+al:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+ala:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+amiac:
+  book_table: 5
+  canonical_unit: UNKNOWN
+  csv_to_printed: 0.001
+  printed_unit: UNKNOWN
+  status: WEAK_MATCH_REVIEW_MANUALLY
+amiacce:
+  book_table: 5
+  canonical_unit: UNKNOWN
+  csv_to_printed: 0.001
+  printed_unit: UNKNOWN
+  status: WEAK_MATCH_REVIEW_MANUALLY
+amiace:
+  book_table: 5
+  canonical_unit: UNKNOWN
+  csv_to_printed: 0.001
+  printed_unit: UNKNOWN
+  status: WEAK_MATCH_REVIEW_MANUALLY
+amiacne:
+  book_table: 5
+  canonical_unit: UNKNOWN
+  csv_to_printed: 0.001
+  printed_unit: UNKNOWN
+  status: WEAK_MATCH_REVIEW_MANUALLY
+apigen:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+apigen6cgls:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+apigen7onshps:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+arg:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+as:
+  book_table: 5
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+ash:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+asp:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+biot:
+  book_table: 2
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: WEAK_MATCH_REVIEW_MANUALLY
+ca:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+caconac:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+caffac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+camt:
+  book_table: 11
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+carot:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: WEAK_MATCH_REVIEW_MANUALLY
+carta:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+cartb:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+cartbeq:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: WEAK_MATCH_REVIEW_MANUALLY
+cartoid:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+catec:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+cd:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+chlrac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+cho:
+  book_table: 6
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+choavldf:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+chocal:
+  book_table: 3
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+cholc:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+cinmac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+citac:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+co:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+coumaco:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+coumacp:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+cr:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+crypxb:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+cu:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+cys:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+daidzn:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+dhbenzac34:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+doh25:
+  book_table: 3
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+ellgac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+enerc:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+epicatec:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+epicategc:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+epicatgc3gal:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+ergcal:
+  book_table: 3
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+f10d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f11d0:
+  book_table: 1
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f12d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f14d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f14d1cn5:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f15d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f16d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f16d1cn7:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f18d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f18d1cn9:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f18d2cn6:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f18d3n3:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f20d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f20d1cn9:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+f20d2n6:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+f20d3n6:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+f20d4n6:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f20d5n3:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f22d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f22d1cn9:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+f22d2n6:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f22d5n3:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f22d6n3:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f24d0:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+f24d1cn9:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+facis:
+  book_table: 5
+  canonical_unit: UNKNOWN
+  csv_to_printed: 0.001
+  printed_unit: UNKNOWN
+  status: WEAK_MATCH_REVIEW_MANUALLY
+facn3:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+facn5:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+facn6:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+facn7:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+facn9:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+faess:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+fams:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+fapu:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+fasat:
+  book_table: 7
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+fatce:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+fauns:
+  book_table: 5
+  canonical_unit: UNKNOWN
+  csv_to_printed: 0.001
+  printed_unit: UNKNOWN
+  status: WEAK_MATCH_REVIEW_MANUALLY
+fe:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+ferac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+fibins:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+fibsol:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+fibtg:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+folsum:
+  book_table: 2
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+frus:
+  book_table: 6
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+fsugar:
+  book_table: 6
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+fumac:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+galcatec:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+gallac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+glu:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+glus:
+  book_table: 6
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+gly:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+gnstein:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+hbenzal3:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+hespd:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+hespt:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+hg:
+  book_table: 5
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+his:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+ile:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+isormt:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+k:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+kaemf:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+leu:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+li:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+luteol:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+lutn:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+lycpn:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+lys:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+malac:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+mals:
+  book_table: 6
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+met:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+mg:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+mn:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+mnrleq:
+  book_table: 5
+  canonical_unit: UNKNOWN
+  csv_to_printed: 0.001
+  printed_unit: UNKNOWN
+  status: WEAK_MATCH_REVIEW_MANUALLY
+mnrlet:
+  book_table: 5
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: WEAK_MATCH_REVIEW_MANUALLY
+mnrlnet:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+mnrlpet:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+mnrltx:
+  book_table: 5
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+mo:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+myrct:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+na:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+narng:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+ni:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+nia:
+  book_table: 2
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+olsac:
+  book_table: 11
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: WEAK_MATCH_REVIEW_MANUALLY
+orgac:
+  book_table: 5
+  canonical_unit: UNKNOWN
+  csv_to_printed: 0.001
+  printed_unit: UNKNOWN
+  status: WEAK_MATCH_REVIEW_MANUALLY
+oxali:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+oxals:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+oxalt:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+p:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+pantac:
+  book_table: 2
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+pb:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+pcathac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+phe:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+phystr:
+  book_table: 3
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: WEAK_MATCH_REVIEW_MANUALLY
+phytac:
+  book_table: 11
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+polyph:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+pro:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+protcnt:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+querce:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+querce3bdgls:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+querce3bgls:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+querce3ortns:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+quinac:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+rafs:
+  book_table: 11
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+retol:
+  book_table: 3
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+ribf:
+  book_table: 2
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+rsvrtol:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+sapon:
+  book_table: 11
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+se:
+  book_table: 5
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+ser:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+sinpac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+starch:
+  book_table: 6
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+stas:
+  book_table: 11
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+stgstr:
+  book_table: 11
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+stostrb:
+  book_table: 11
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+sucac:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+sucs:
+  book_table: 6
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+syrgac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+tarac:
+  book_table: 9
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+thia:
+  book_table: 2
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+thr:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+tocph:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+tocpha:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+tocphb:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+tocphd:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+tocphg:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+toctr:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+toctra:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+toctrb:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+toctrd:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+toctrg:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+trp:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+tyr:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+val:
+  book_table: 8
+  canonical_unit: g_per_100g_protein
+  csv_to_printed: per_protein
+  printed_unit: g_per_100g_protein
+  status: VERIFIED
+vanlac:
+  book_table: 10
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+vers:
+  book_table: 11
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+vit:
+  book_table: 2
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: WEAK_MATCH_REVIEW_MANUALLY
+vita:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: WEAK_MATCH_REVIEW_MANUALLY
+vitb:
+  book_table: 5
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: WEAK_MATCH_REVIEW_MANUALLY
+vitb6c:
+  book_table: 2
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+vitc:
+  book_table: 2
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+vitd:
+  book_table: 3
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: WEAK_MATCH_REVIEW_MANUALLY
+vite:
+  book_table: 3
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
+vitk:
+  book_table: 3
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+vitk1:
+  book_table: 3
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+vitk2:
+  book_table: 3
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+water:
+  book_table: 1
+  canonical_unit: g
+  csv_to_printed: 1.0
+  printed_unit: g
+  status: VERIFIED
+xantp:
+  book_table: 2
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: WEAK_MATCH_REVIEW_MANUALLY
+zea:
+  book_table: 4
+  canonical_unit: ug
+  csv_to_printed: 1000000.0
+  printed_unit: ug
+  status: VERIFIED
+zn:
+  book_table: 5
+  canonical_unit: mg
+  csv_to_printed: 1000.0
+  printed_unit: mg
+  status: VERIFIED
