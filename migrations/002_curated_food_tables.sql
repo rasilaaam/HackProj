@@ -13,17 +13,18 @@ CREATE TABLE IF NOT EXISTS allergens (
     description TEXT
 );
 
-CREATE TABLE IF NOT EXISTS food_tags (
+CREATE TABLE IF NOT EXISTS food_allergens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     food_id INTEGER NOT NULL,
+    allergen_id INTEGER NOT NULL,
     presence TEXT NOT NULL CHECK(presence IN ('PRESENT', 'ABSENT', 'UNKNOWN')),
     source_id INTEGER,
     assessed_at TEXT,
     notes TEXT,
     FOREIGN KEY (food_id) REFERENCES foods(id) ON DELETE CASCADE,
+    FOREIGN KEY (allergen_id) REFERENCES allergens(id) ON DELETE CASCADE,
     FOREIGN KEY (source_id) REFERENCES sources(id),
-    FOREIGN KEY (id) REFERENCES allergens(id) ON DELETE CASCADE,
-    UNIQUE(food_id, id)
+    UNIQUE(food_id, allergen_id)
 );
 
 -- Diet type compatibility
@@ -129,3 +130,14 @@ CREATE TABLE IF NOT EXISTS preparation_effects (
     FOREIGN KEY (source_id) REFERENCES sources(id),
     UNIQUE(preparation_id, nutrient_id)
 );
+
+-- ============================================================
+-- INDICES FOR PERFORMANCE
+-- ============================================================
+CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id);
+CREATE INDEX IF NOT EXISTS idx_foods_group ON foods(food_group_id);
+CREATE INDEX IF NOT EXISTS idx_food_nutrients_food ON food_nutrients(food_id);
+CREATE INDEX IF NOT EXISTS idx_food_nutrients_nutrient ON food_nutrients(nutrient_id);
+CREATE INDEX IF NOT EXISTS idx_food_aliases_food ON food_aliases(food_id);
+CREATE INDEX IF NOT EXISTS idx_food_allergens_food ON food_allergens(food_id);
+CREATE INDEX IF NOT EXISTS idx_diet_type_tags_food ON diet_type_tags(food_id);
