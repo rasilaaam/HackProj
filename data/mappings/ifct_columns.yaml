@@ -258,9 +258,10 @@ ellgac:
   status: VERIFIED
 enerc:
   book_table: 1
-  canonical_unit: g
+  canonical_unit: kcal
   csv_to_printed: 1.0
-  printed_unit: g
+  printed_to_canonical: 0.2388
+  printed_unit: kJ
   status: VERIFIED
 epicatec:
   book_table: 10

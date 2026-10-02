@@ -26,6 +26,20 @@ for csv_col in sorted(verification.keys()):
         status_count[status] += 1
         continue
     
+    # Special handling for energy: CSV is kJ, book is kJ, canonical is kcal
+    if csv_col == 'enerc':
+        entry = {
+            "book_table": 1,
+            "csv_to_printed": 1.0,  # CSV kJ to printed kJ
+            "printed_unit": "kJ",
+            "printed_to_canonical": 0.2388,  # kJ to kcal
+            "canonical_unit": "kcal",
+            "status": status
+        }
+        mapping[csv_col] = entry
+        status_count[status] += 1
+        continue
+    
     # Parse factor
     if csv_to_printed == '':
         factor = None
@@ -83,3 +97,4 @@ with open('data/mappings/ifct_columns.yaml', 'w') as f:
 print(f"Created mapping with {len(mapping)} VERIFIED/WEAK columns")
 for s in sorted(status_count.keys()):
     print(f"  {s}: {status_count[s]}")
+
