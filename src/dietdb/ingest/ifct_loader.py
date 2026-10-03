@@ -234,6 +234,34 @@ class IFCTLoader:
                         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='data_quality_flags'"
                     ).fetchone()
                     if flag_table:
+                        def source_number(column):
+                            try:
+                                return float(row.get(column, ''))
+                            except (TypeError, ValueError):
+                                return None
+                        protein, fat, carbohydrate, energy = (
+                            source_number('protcnt'), source_number('fatce'),
+                            source_number('choavldf'), source_number('enerc')
+                        )
+                        if all(value is not None for value in (energy, protein, fat, carbohydrate)):
+                            expected = 4.18 * (4 * protein + 9 * fat + 4 * carbohydrate)
+                            if expected and abs(energy - expected) / expected > 0.15:
+                                cur.execute(
+                                    """INSERT INTO data_quality_flags
+                                       (table_name, record_id, flag_type, severity, description, field_name, raw_value)
+                                       VALUES ('foods', ?, 'ENERGY_CONSISTENCY', 'WARNING', ?, 'enerc', ?)""",
+                                    (food_id, 'CSV energy differs from macro estimate by more than 15%', str(energy)))
+                        if 'K.' in row.get('lang', ''):
+                            cur.execute(
+                                """INSERT INTO data_quality_flags
+                                   (table_name, record_id, flag_type, severity, description, field_name, raw_value)
+                                   VALUES ('foods', ?, 'UNVERIFIED_LANGUAGE_PREFIX', 'WARNING', 'Language field contains K. prefix', 'lang', ?)""",
+                                (food_id, row.get('lang', '')))
+
+                    flag_table = self.conn.execute(
+                        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='data_quality_flags'"
+                    ).fetchone()
+                    if flag_table:
                         for prefix in ('E.', 'K.'):
                             if prefix in row.get('lang', ''):
                                 cur.execute(
@@ -353,6 +381,21 @@ class IFCTLoader:
                    (table_name, record_id, flag_type, severity, description, field_name, raw_value)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""", flag
             )
+        for row in self.conn.execute(
+            """SELECT child.food_id, child_n.ifct_column_code, parent_n.ifct_column_code
+               FROM food_nutrients child
+               JOIN nutrients child_n ON child_n.id = child.nutrient_id
+               JOIN nutrients parent_n ON parent_n.id = child_n.parent_id
+               JOIN food_nutrients parent ON parent.food_id = child.food_id
+                 AND parent.nutrient_id = parent_n.id
+               WHERE child.value_status = 'MEASURED' AND parent.value_status = 'MEASURED'
+                 AND child.value_canonical > parent.value_canonical"""
+        ):
+            self.conn.execute(
+                """INSERT INTO data_quality_flags
+                   (table_name, record_id, flag_type, severity, description)
+                   VALUES ('foods', ?, 'HIERARCHY_CHILD_EXCEEDS_PARENT', 'WARNING', ?)""",
+                (row[0], f'{row[1]} exceeds parent {row[2]}'))
 
 
 def main():
