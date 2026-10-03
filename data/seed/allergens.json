@@ -1,0 +1,16 @@
+[
+  {"code":"celery","name":"Celery","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"gluten_cereals","name":"Cereals containing gluten","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"crustaceans","name":"Crustaceans","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"eggs","name":"Eggs","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"fish","name":"Fish","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"lupin","name":"Lupin","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"milk","name":"Milk","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"molluscs","name":"Molluscs","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"mustard","name":"Mustard","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"tree_nuts","name":"Tree nuts","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"peanuts","name":"Peanuts","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"sesame","name":"Sesame","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"soybeans","name":"Soybeans","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"},
+  {"code":"sulphites","name":"Sulphites","description":"EU Regulation 1169/2011 Annex II; FSSAI status UNVERIFIED"}
+]

@@ -105,6 +105,7 @@ class RuleStatus(str, Enum):
     CLINICALLY_REVIEWED = "CLINICALLY_REVIEWED"
     APPROVED = "APPROVED"
     DEPRECATED = "DEPRECATED"
+    TEST_FIXTURE = "TEST_FIXTURE"
 
 
 class Chronicity(str, Enum):

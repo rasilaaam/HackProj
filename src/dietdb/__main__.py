@@ -96,6 +96,11 @@ def main():
     hp = sp.add_parser('hash', help='Compute database hash')
     hp.add_argument('--db', required=True)
 
+    rp = sp.add_parser('load-rules', help='Load validated declarative rules')
+    rp.add_argument('--db', required=True)
+    rp.add_argument('--rules-dir', default='data/rules')
+    rp.add_argument('--mode', choices=('production', 'test'), default='production')
+
     a = p.parse_args()
     if a.cmd == 'build':
         r = build_database(a.db, getattr(a, 'csv', None), a.output_hash)
@@ -103,6 +108,9 @@ def main():
             print(r)
     elif a.cmd == 'hash':
         print(get_db_hash(a.db))
+    elif a.cmd == 'load-rules':
+        from dietdb.rules import load_rules
+        print(f"Loaded {load_rules(a.db, a.rules_dir, a.mode)} rules")
 
 
 if __name__ == '__main__':
