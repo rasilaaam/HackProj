@@ -16,7 +16,7 @@ def get_db_hash(db_path: str) -> str:
 
     cur.execute("""
         SELECT name FROM sqlite_master
-        WHERE type='table' AND name NOT LIKE 'food_aliases_fts%'
+        WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'food_aliases_fts%'
         AND name != 'build_metadata'
         AND name != 'schema_version'
         ORDER BY name
@@ -26,12 +26,14 @@ def get_db_hash(db_path: str) -> str:
     h = hashlib.sha256()
     for tbl in tables:
         cur.execute(f"PRAGMA table_info({tbl})")
-        cols = [r['name'] for r in cur.fetchall()
-                if r['name'] not in ('rowid','created_at','updated_at')]
+        info = cur.fetchall()
+        cols = [r['name'] for r in info if r['name'] not in ('rowid','created_at','updated_at')]
         if not cols:
             continue
         col_list = ', '.join(f'"{c}"' for c in cols)
-        cur.execute(f"SELECT {col_list} FROM {tbl} ORDER BY {col_list}")
+        primary = [r['name'] for r in sorted(info, key=lambda r: r['pk']) if r['pk']]
+        order = ', '.join(f'"{c}"' for c in primary or cols)
+        cur.execute(f"SELECT {col_list} FROM {tbl} ORDER BY {order}")
         h.update((tbl + '\0').encode())
         for row in cur:
             for c in cols:
@@ -68,6 +70,11 @@ def build_database(db_path: str, csv_path: str = None, output_hash: bool = False
 
     # Load IFCT data
     IFCTLoader(csv_path, mapping_path, str(db_path), sha256).load()
+    from dietdb.rules import seed_reference_data
+    conn = sqlite3.connect(str(db_path))
+    seed_reference_data(conn, repo / 'data/seed')
+    conn.commit()
+    conn.close()
 
     # Record build metadata
     conn = sqlite3.connect(str(db_path))

@@ -4,7 +4,7 @@ Pydantic models - Part 4: Diet rules
 
 from typing import Optional, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from dietdb.models import (
     RuleKind, RuleTargetType, RuleBasis, RuleTier, RuleEnforcement, RuleStatus
@@ -48,8 +48,7 @@ class Rule(BaseModel):
             return json.loads(v)
         return v
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "examples": [
                 {
                     "slug": "t2dm_protein_bound_test",
@@ -68,7 +67,7 @@ class Rule(BaseModel):
                     "status": "DRAFT"
                 }
             ]
-        }
+        })
 
 
 class RuleProfile(BaseModel):

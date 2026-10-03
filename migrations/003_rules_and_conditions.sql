@@ -129,8 +129,7 @@ CREATE TABLE IF NOT EXISTS data_quality_flags (
     expected_value TEXT,
     resolved INTEGER DEFAULT 0,
     resolution_notes TEXT,
-    flagged_at TEXT NOT NULL DEFAULT (datetime('now')),
-    flagged_by TEXT DEFAULT 'SYSTEM'
+    flagged_by TEXT
 ) STRICT;
 
 -- ============================================================
