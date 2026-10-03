@@ -105,8 +105,8 @@ def main():
 
     rp = sp.add_parser('load-rules', help='Load validated declarative rules')
     rp.add_argument('--db', required=True)
-    rp.add_argument('--rules-dir', default='data/rules')
-    rp.add_argument('--mode', choices=('production', 'test'), default='production')
+    rp.add_argument('--rules-dir', default=None)
+    rp.add_argument('--mode', choices=('production', 'test', 'draft-review'), default='production')
 
     a = p.parse_args()
     if a.cmd == 'build':
@@ -117,7 +117,17 @@ def main():
         print(get_db_hash(a.db))
     elif a.cmd == 'load-rules':
         from dietdb.rules import load_rules
-        print(f"Loaded {load_rules(a.db, a.rules_dir, a.mode)} rules")
+        rules_dir = a.rules_dir or ('data/rules/draft' if a.mode == 'draft-review' else 'data/rules')
+        if a.mode == 'draft-review':
+            if Path(a.db).resolve() == (Path('data/diet.db').resolve()):
+                raise SystemExit('draft-review requires a separate database path')
+            from dietdb.rules import load_conditions
+            count = load_rules(a.db, rules_dir, a.mode)
+            condition_file = Path('data/conditions/draft_conditions.json')
+            conditions = load_conditions(a.db, condition_file) if condition_file.exists() else 0
+            print(f"RULES ARE UNREVIEWED DRAFTS: loaded {count} rules and {conditions} conditions")
+        else:
+            print(f"Loaded {load_rules(a.db, rules_dir, a.mode)} rules")
 
 
 if __name__ == '__main__':

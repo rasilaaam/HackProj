@@ -1,0 +1,123 @@
+[
+  {
+    "slug": "htn_sodium_max_2300",
+    "name": "Hypertension: sodium ceiling",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "sodium",
+    "max_value": 2300,
+    "unit": "mg",
+    "basis": "PER_DAY",
+    "tier": "THERAPEUTIC",
+    "enforcement": "HARD",
+    "applies_when": {
+      "var": "dx_hypertension",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "Keep sodium to no more than 2,300 mg a day.",
+    "source_locator": "2025 AHA/ACC multi-society guideline for the prevention, detection, evaluation and management of high blood pressure in adults. DRAFT: values taken from secondary summaries (StatPearls NBK482514, AHA statement Circ Res 2021 Table 4); primary guideline text NOT read.",
+    "evidence_grade": "AHA/ACC guideline (class/LOE not verified)",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "htn_sodium_target_1500",
+    "name": "Hypertension: sodium target 1,500 mg",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "sodium",
+    "max_value": 1500,
+    "unit": "mg",
+    "basis": "PER_DAY",
+    "tier": "THERAPEUTIC",
+    "enforcement": "SOFT",
+    "applies_when": {
+      "var": "dx_hypertension",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "An ideal sodium intake for people with high blood pressure is below 1,500 mg a day; any reduction helps.",
+    "source_locator": "2025 AHA/ACC multi-society guideline for the prevention, detection, evaluation and management of high blood pressure in adults. DRAFT: values taken from secondary summaries (StatPearls NBK482514, AHA statement Circ Res 2021 Table 4); primary guideline text NOT read.",
+    "evidence_grade": "AHA/ACC guideline (class/LOE not verified)",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "htn_potassium_3500_5000",
+    "name": "Hypertension (normal kidney function): potassium from food",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "potassium",
+    "min_value": 3500,
+    "max_value": 5000,
+    "unit": "mg",
+    "basis": "PER_DAY",
+    "tier": "THERAPEUTIC",
+    "enforcement": "SOFT",
+    "applies_when": {
+      "and": [
+        {
+          "var": "dx_hypertension",
+          "op": "==",
+          "value": true
+        },
+        {
+          "var": "dx_ckd",
+          "op": "==",
+          "value": false
+        },
+        {
+          "var": "egfr_ml_min_1_73m2",
+          "op": ">=",
+          "value": 60
+        }
+      ]
+    },
+    "rationale": "For people with high blood pressure and normal kidney function, 3,500 to 5,000 mg of potassium a day from food can help lower blood pressure.",
+    "source_locator": "2025 AHA/ACC multi-society guideline for the prevention, detection, evaluation and management of high blood pressure in adults. DRAFT: values taken from secondary summaries (StatPearls NBK482514, AHA statement Circ Res 2021 Table 4); primary guideline text NOT read. Not for CKD or conditions needing potassium monitoring. REVIEW: ACE inhibitor/ARB or potassium-sparing diuretic use raises hyperkalaemia risk; no source read for this.",
+    "evidence_grade": "AHA/ACC guideline (class/LOE not verified)",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "htn_icmr_added_salt_5g",
+    "name": "Hypertension: ICMR-NIN added salt limit",
+    "kind": "ADVISORY_TEXT",
+    "target_type": "NUTRIENT",
+    "target_ref": "sodium",
+    "basis": "PER_DAY",
+    "tier": "THERAPEUTIC",
+    "enforcement": "ADVISORY",
+    "applies_when": {
+      "var": "dx_hypertension",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "Indian dietary guidelines advise no more than 5 g of added salt a day (about 2,000 mg of sodium).",
+    "source_locator": "ICMR-NIN Dietary Guidelines for Indians 2024 (guideline on restricting salt). Text read via vikaspedia reproduction; the same text also cites 2,300 mg sodium, so the two figures are not consistent. Kept advisory.",
+    "evidence_grade": "ICMR-NIN guideline",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "htn_dash_pattern",
+    "name": "Hypertension: DASH-style eating pattern",
+    "kind": "ADVISORY_TEXT",
+    "target_type": "TAG",
+    "target_ref": "dash_pattern",
+    "basis": "PER_DAY",
+    "tier": "THERAPEUTIC",
+    "enforcement": "ADVISORY",
+    "applies_when": {
+      "var": "dx_hypertension",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "A DASH-style pattern (fruit, vegetables, whole grains, low-fat dairy) lowers blood pressure.",
+    "source_locator": "2025 AHA/ACC multi-society guideline for the prevention, detection, evaluation and management of high blood pressure in adults. DRAFT: values taken from secondary summaries (StatPearls NBK482514, AHA statement Circ Res 2021 Table 4); primary guideline text NOT read.",
+    "evidence_grade": "AHA/ACC guideline (class/LOE not verified)",
+    "status": "DRAFT",
+    "version": 1
+  }
+]

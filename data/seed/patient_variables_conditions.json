@@ -1,0 +1,56 @@
+[
+  {
+    "variable_name": "dx_type2_diabetes",
+    "display_name": "Diagnosed type 2 diabetes",
+    "data_type": "BOOLEAN",
+    "source": "USER_ENTERED",
+    "range_note": "diagnosis flag"
+  },
+  {
+    "variable_name": "dx_hypertension",
+    "display_name": "Diagnosed hypertension",
+    "data_type": "BOOLEAN",
+    "source": "USER_ENTERED",
+    "range_note": "diagnosis flag"
+  },
+  {
+    "variable_name": "dx_ckd",
+    "display_name": "Diagnosed chronic kidney disease",
+    "data_type": "BOOLEAN",
+    "source": "USER_ENTERED",
+    "range_note": "diagnosis flag"
+  },
+  {
+    "variable_name": "renal_replacement",
+    "display_name": "Kidney replacement therapy",
+    "data_type": "ENUM",
+    "allowed_values": [
+      "none",
+      "hemodialysis",
+      "peritoneal_dialysis",
+      "transplant"
+    ],
+    "source": "USER_ENTERED",
+    "range_note": "none if not on dialysis or transplanted"
+  },
+  {
+    "variable_name": "clinician_max_potassium_mg_day",
+    "display_name": "Clinician-set daily potassium limit",
+    "data_type": "REAL",
+    "unit": "mg",
+    "min_value": 0,
+    "max_value": 10000,
+    "source": "USER_ENTERED",
+    "range_note": "plausibility bound, not a clinical threshold; value must come from the patient's clinician"
+  },
+  {
+    "variable_name": "clinician_max_phosphorus_mg_day",
+    "display_name": "Clinician-set daily phosphorus limit",
+    "data_type": "REAL",
+    "unit": "mg",
+    "min_value": 0,
+    "max_value": 5000,
+    "source": "USER_ENTERED",
+    "range_note": "plausibility bound, not a clinical threshold; value must come from the patient's clinician"
+  }
+]
