@@ -5,7 +5,7 @@
 -- PATIENT VARIABLES (the ONLY variables rules may reference)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS patient_variables (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     variable_name TEXT UNIQUE NOT NULL,
     display_name TEXT NOT NULL,
     data_type TEXT NOT NULL CHECK(data_type IN ('INTEGER', 'REAL', 'BOOLEAN', 'STRING', 'ENUM')),
@@ -15,13 +15,13 @@ CREATE TABLE IF NOT EXISTS patient_variables (
     max_value REAL,
     source TEXT NOT NULL,
     description TEXT
-);
+) STRICT;
 
 -- ============================================================
 -- MEDICAL CONDITIONS/DISEASES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS conditions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     slug TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     icd10_code TEXT,
@@ -38,20 +38,20 @@ CREATE TABLE IF NOT EXISTS conditions (
     description TEXT,
     source_id INTEGER,
     FOREIGN KEY (source_id) REFERENCES sources(id)
-);
+) STRICT;
 
 CREATE TABLE IF NOT EXISTS condition_synonyms (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     condition_id INTEGER NOT NULL,
     synonym TEXT NOT NULL,
     synonym_type TEXT DEFAULT 'ABBREVIATION',
     FOREIGN KEY (condition_id) REFERENCES conditions(id) ON DELETE CASCADE,
     UNIQUE(condition_id, synonym)
-);
+) STRICT;
 
 -- Condition Profiles (stages/variants)
 CREATE TABLE IF NOT EXISTS condition_profiles (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     condition_id INTEGER NOT NULL,
     slug TEXT NOT NULL,
     name TEXT NOT NULL,
@@ -61,13 +61,13 @@ CREATE TABLE IF NOT EXISTS condition_profiles (
     priority INTEGER DEFAULT 0,
     FOREIGN KEY (condition_id) REFERENCES conditions(id) ON DELETE CASCADE,
     UNIQUE(condition_id, slug)
-);
+) STRICT;
 
 -- ============================================================
 -- DIET RULES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS rules (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     slug TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     kind TEXT NOT NULL CHECK(kind IN (
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS rules (
     valid_to TEXT,
     FOREIGN KEY (source_id) REFERENCES sources(id),
     CHECK (min_value IS NULL OR max_value IS NULL OR min_value <= max_value)
-);
+) STRICT;
 
 CREATE TABLE IF NOT EXISTS rule_profiles (
     rule_id INTEGER NOT NULL,
@@ -112,13 +112,13 @@ CREATE TABLE IF NOT EXISTS rule_profiles (
     PRIMARY KEY (rule_id, condition_profile_id),
     FOREIGN KEY (rule_id) REFERENCES rules(id) ON DELETE CASCADE,
     FOREIGN KEY (condition_profile_id) REFERENCES condition_profiles(id) ON DELETE CASCADE
-);
+) STRICT;
 
 -- ============================================================
 -- DATA QUALITY FLAGS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS data_quality_flags (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     table_name TEXT NOT NULL,
     record_id INTEGER NOT NULL,
     flag_type TEXT NOT NULL,
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS data_quality_flags (
     resolution_notes TEXT,
     flagged_at TEXT NOT NULL DEFAULT (datetime('now')),
     flagged_by TEXT DEFAULT 'SYSTEM'
-);
+) STRICT;
 
 -- ============================================================
 -- INDICES FOR PERFORMANCE

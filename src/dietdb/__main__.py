@@ -43,6 +43,8 @@ def get_db_hash(db_path: str) -> str:
 
 def build_database(db_path: str, csv_path: str = None, output_hash: bool = False):
     """Build database from IFCT 2017 CSV with YAML mapping."""
+    if tuple(map(int, sqlite3.sqlite_version.split('.'))) < (3, 37, 0):
+        raise RuntimeError(f"SQLite 3.37+ is required, found {sqlite3.sqlite_version}")
     from dietdb.ingest.ifct_loader import IFCTLoader
 
     repo = Path(__file__).parent.parent.parent

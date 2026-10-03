@@ -21,6 +21,8 @@ class DatabaseManager:
 
     def get_connection(self, readonly: bool = False) -> sqlite3.Connection:
         """Get database connection"""
+        if tuple(map(int, sqlite3.sqlite_version.split('.'))) < (3, 37, 0):
+            raise RuntimeError(f"SQLite 3.37+ is required, found {sqlite3.sqlite_version}")
         if readonly and not self.db_path.exists():
             raise FileNotFoundError(f"Database not found: {self.db_path}")
         if readonly:

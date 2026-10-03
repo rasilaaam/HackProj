@@ -8,16 +8,15 @@ PRAGMA foreign_keys = ON;
 -- ============================================================
 CREATE TABLE IF NOT EXISTS schema_version (
     version INTEGER PRIMARY KEY,
-    applied_at TEXT NOT NULL DEFAULT (datetime('now')),
     script_name TEXT NOT NULL,
     checksum TEXT NOT NULL
-);
+) STRICT;
 
 -- ============================================================
 -- DATA SOURCES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS sources (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     slug TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
@@ -30,15 +29,14 @@ CREATE TABLE IF NOT EXISTS sources (
     local_path TEXT,
     checksum TEXT,
     verification_status TEXT DEFAULT 'UNVERIFIED',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
     notes TEXT
-);
+) STRICT;
 
 -- ============================================================
 -- NUTRIENTS DICTIONARY
 -- ============================================================
 CREATE TABLE IF NOT EXISTS nutrients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     canonical_name TEXT UNIQUE NOT NULL,
     display_name TEXT NOT NULL,
     category TEXT NOT NULL,
@@ -51,26 +49,26 @@ CREATE TABLE IF NOT EXISTS nutrients (
     sort_order INTEGER DEFAULT 0,
     FOREIGN KEY (parent_id) REFERENCES nutrients(id),
     CHECK (is_constrainable IN (0, 1))
-);
+) STRICT;
 
 -- ============================================================
 -- FOOD GROUPS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS food_groups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     code TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
     parent_id INTEGER,
     level INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (parent_id) REFERENCES food_groups(id)
-);
+) STRICT;
 
 -- ============================================================
 -- FOODS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS foods (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     source_code TEXT NOT NULL,
     source_id INTEGER NOT NULL,
     english_name TEXT NOT NULL,
@@ -81,18 +79,16 @@ CREATE TABLE IF NOT EXISTS foods (
     reference_basis TEXT NOT NULL DEFAULT 'PER_100G_EDIBLE',
     notes TEXT,
     quality_flag TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(source_code, source_id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     FOREIGN KEY (food_group_id) REFERENCES food_groups(id)
-);
+) STRICT;
 
 -- ============================================================
 -- FOOD ALIASES (for search)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS food_aliases (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     food_id INTEGER NOT NULL,
     alias TEXT NOT NULL,
     language TEXT NOT NULL,
@@ -100,7 +96,7 @@ CREATE TABLE IF NOT EXISTS food_aliases (
     alias_type TEXT NOT NULL DEFAULT 'COMMON',
     is_preferred INTEGER DEFAULT 0,
     FOREIGN KEY (food_id) REFERENCES foods(id) ON DELETE CASCADE
-);
+) STRICT;
 
 CREATE VIRTUAL TABLE IF NOT EXISTS food_aliases_fts USING fts5(
     alias,
@@ -144,4 +140,9 @@ CREATE TABLE IF NOT EXISTS food_nutrients (
     FOREIGN KEY (nutrient_id) REFERENCES nutrients(id),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     CHECK (value_canonical >= 0 OR value_status IN ('NOT_DETECTED', 'NOT_ANALYSED'))
-);
+) STRICT;
+
+CREATE TABLE IF NOT EXISTS build_metadata (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+) STRICT;
