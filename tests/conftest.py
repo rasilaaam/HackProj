@@ -25,10 +25,26 @@ def ifct_db(tmp_path_factory):
     """Build the IFCT database once for the whole test session."""
     db_file = tmp_path_factory.mktemp("ifct") / "diet.db"
     conn = sqlite3.connect(db_file)
-    for migration in ("001_initial_schema.sql", "002_curated_food_tables.sql"):
-        conn.executescript((REPO_ROOT / "migrations" / migration).read_text())
+    for migration in sorted((REPO_ROOT / "migrations").glob("*.sql")):
+        conn.executescript(migration.read_text())
     conn.close()
     IFCTLoader(str(CSV_PATH), str(MAPPING_PATH), str(db_file), EXPECTED_SHA256).load()
+    return db_file
+
+
+@pytest.fixture(scope="session")
+def draft_db(ifct_db, tmp_path_factory):
+    """A built working copy with draft rules and conditions loaded."""
+    import shutil
+    from dietdb.rules import load_conditions, load_rules, seed_reference_data
+    db_file = tmp_path_factory.mktemp("draft") / "draft.db"
+    shutil.copy2(ifct_db, db_file)
+    conn = sqlite3.connect(db_file)
+    seed_reference_data(conn, REPO_ROOT / "data/seed")
+    conn.commit()
+    conn.close()
+    load_rules(db_file, REPO_ROOT / "data/rules/draft", "draft-review")
+    load_conditions(db_file, REPO_ROOT / "data/conditions/draft_conditions.json")
     return db_file
 
 
@@ -72,10 +88,10 @@ def sample_patient_variables():
         "age_years": 45,
         "sex": "M",
         "weight_kg": 70,
-        "has_t2dm": True,
-        "has_ckd": False,
-        "egfr": 90,
-        "hba1c_percent": 7.5,
+        "dx_type2_diabetes": True,
+        "dx_ckd": False,
+        "egfr_ml_min_1_73m2": 90,
+        "hba1c_pct": 7.5,
     }
 
 
@@ -94,7 +110,7 @@ def sample_rule():
         "basis": "PER_DAY",
         "tier": "THERAPEUTIC",
         "enforcement": "HARD",
-        "applies_when": {"op": "eq", "field": "has_t2dm", "value": True},
+        "applies_when": {"var": "dx_type2_diabetes", "op": "==", "value": True},
         "rationale": "Moderate protein for blood sugar control",
         "status": "TEST_FIXTURE"
     }

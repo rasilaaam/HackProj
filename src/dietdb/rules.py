@@ -59,11 +59,48 @@ def seed_reference_data(conn, seed_dir: Path) -> None:
     for item in variable_items:
         conn.execute(
             """INSERT OR REPLACE INTO patient_variables
-               (variable_name, display_name, data_type, unit, min_value, max_value, source, description)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+               (variable_name, display_name, data_type, unit, allowed_values, min_value, max_value, source, description)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (item["variable_name"], item["display_name"], item["data_type"], item.get("unit"),
+             json.dumps(item["allowed_values"]) if item.get("allowed_values") else None,
              item.get("min_value"), item.get("max_value"), item["source"], item.get("range_note")),
         )
+    _seed_allergen_inferences(conn, seed_dir)
+
+
+def _seed_allergen_inferences(conn, seed_dir: Path) -> None:
+    """Add reviewable, deterministic group/name inferences with provenance flags."""
+    mapping_path = seed_dir / "food_allergen_inferences.json"
+    configured = json.loads(mapping_path.read_text()) if mapping_path.exists() else {}
+    allergens = {r[0].lower(): r[1] for r in conn.execute("SELECT lower(code), id FROM allergens")}
+    rows = conn.execute("""SELECT f.id, f.source_code, lower(f.english_name), upper(g.code)
+        FROM foods f JOIN food_groups g ON g.id=f.food_group_id ORDER BY f.id""").fetchall()
+    for food_id, source_code, name, group_code in rows:
+        codes = [str(x).lower() for x in configured.get(source_code, [])]
+        if not codes:
+            if group_code == "L": codes = ["milk"]
+            elif group_code == "M": codes = ["eggs"]
+            elif group_code in {"P", "Q", "R", "S"}:
+                if any(word in name for word in ("prawn", "shrimp", "crab", "lobster")):
+                    codes = ["crustaceans"]
+                elif any(word in name for word in ("clam", "oyster", "mussel", "snail")):
+                    codes = ["molluscs"]
+                else:
+                    codes = ["fish"]
+        for code in codes:
+            allergen_id = allergens.get(code)
+            if not allergen_id:
+                continue
+            conn.execute("""INSERT OR IGNORE INTO food_allergens
+                (food_id, allergen_id, presence, source_id, notes)
+                VALUES (?, ?, 'PRESENT', (SELECT source_id FROM foods WHERE id=?), ?)""",
+                (food_id, allergen_id, food_id, "INFERRED_FROM_GROUP" if source_code not in configured else "INFERRED_FROM_CONFIG"))
+            flag = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='data_quality_flags'").fetchone()
+            if flag:
+                conn.execute("""INSERT INTO data_quality_flags
+                    (table_name, record_id, flag_type, severity, description)
+                    VALUES ('food_allergens', ?, 'INFERRED_ALLERGEN', 'WARNING', ?)""",
+                    (food_id, f"{code}: inferred allergen presence; review before clinical use"))
 
 
 def load_rules(db_path: str | Path, rules_dir: str | Path, mode: str = "production") -> int:

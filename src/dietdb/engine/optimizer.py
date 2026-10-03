@@ -8,6 +8,7 @@ from typing import Any
 
 import numpy as np
 from scipy.optimize import linprog
+from dietdb.engine.db import connect_readonly
 
 
 SALT_SODIUM_MG_PER_G = 393.0
@@ -21,19 +22,27 @@ def _allergy_codes(value: Any) -> set[str]:
             value = json.loads(value)
         except json.JSONDecodeError:
             value = [x.strip() for x in value.split(",") if x.strip()]
-    return {str(x) for x in value}
+    return {str(x).strip().lower() for x in value}
+
+
+def _diet_code(value: Any) -> str | None:
+    if not value:
+        return None
+    return {"veg": "VEGETARIAN", "vegetarian": "VEGETARIAN", "non-veg": "NONVEG",
+            "nonveg": "NONVEG", "non vegetarian": "NONVEG"}.get(
+                str(value).strip().lower(), str(value).strip().upper())
 
 
 def _foods(conn: sqlite3.Connection, patient: dict[str, Any], resolved: Any) -> list[dict[str, Any]]:
-    rows = conn.execute("""SELECT f.id, f.source_code, f.english_name, f.food_group_id
-        FROM foods f ORDER BY f.id""").fetchall()
+    rows = conn.execute("""SELECT f.id, f.source_code, f.english_name, f.food_group_id, upper(g.code)
+        FROM foods f LEFT JOIN food_groups g ON g.id=f.food_group_id ORDER BY f.id""").fetchall()
     allergy_codes = _allergy_codes(patient.get("allergy_list"))
     excluded = set(resolved.food_exclusions)
-    diet = patient.get("dietary_pattern")
+    diet = _diet_code(patient.get("dietary_pattern"))
     candidates = []
     hard_upper = {n for n, b in resolved.nutrients.items()
                   if b.get("max") is not None and ("hard" in b or not b.get("soft"))}
-    for food_id, source_code, name, group_id in rows:
+    for food_id, source_code, name, group_id, group_code in rows:
         if source_code in excluded:
             continue
         if allergy_codes:
@@ -45,7 +54,7 @@ def _foods(conn: sqlite3.Connection, patient: dict[str, Any], resolved: Any) -> 
                 continue
         if diet:
             compatible = conn.execute("""SELECT 1 FROM diet_type_tags dt JOIN diet_types d ON d.id=dt.diet_type_id
-                WHERE dt.food_id=? AND d.code=? AND dt.is_compatible=1 LIMIT 1""", (food_id, diet)).fetchone()
+                WHERE dt.food_id=? AND upper(d.code)=? AND dt.is_compatible=1 LIMIT 1""", (food_id, diet)).fetchone()
             if compatible is None:
                 continue
         values = {r[0]: r[1:] for r in conn.execute("""SELECT n.canonical_name, fn.value_canonical,
@@ -54,7 +63,7 @@ def _foods(conn: sqlite3.Connection, patient: dict[str, Any], resolved: Any) -> 
             continue
         approximate = any(v[1] == "NOT_DETECTED" for v in values.values())
         candidates.append({"id": food_id, "source_code": source_code, "name": name,
-                           "food_group_id": group_id, "values": values, "approximate": approximate})
+                           "food_group_id": group_id, "group_code": group_code, "values": values, "approximate": approximate})
     return candidates
 
 
@@ -65,10 +74,27 @@ def _templates(path: Path | None) -> list[dict[str, Any]]:
 
 
 def optimize(db: str | Path, patient: dict[str, Any], resolved: Any,
-             added_salt_g_per_day: float = 5.0, template_path: str | Path | None = None) -> dict[str, Any]:
+             added_salt_g_per_day: float = 5.0, template_path: str | Path | None = None,
+             max_food_grams_per_day: float = 500.0) -> dict[str, Any]:
     """Return a deterministic plan, never claiming success for an unverified LP."""
-    conn = sqlite3.connect(str(db))
+    conn = connect_readonly(db)
+    allergies = _allergy_codes(patient.get("allergy_list"))
+    if allergies:
+        marks = ",".join("?" * len(allergies))
+        known = conn.execute(f"SELECT count(*) FROM allergens WHERE lower(code) IN ({marks})", list(allergies)).fetchone()[0]
+        tagged = conn.execute(f"""SELECT count(*) FROM food_allergens fa JOIN allergens a ON a.id=fa.allergen_id
+            WHERE lower(a.code) IN ({marks})""", list(allergies)).fetchone()[0]
+        if not known or not tagged:
+            conn.close()
+            return {"status": "INCOMPLETE", "foods": [], "slots": [], "nutrients": {},
+                    "needs_info": [{"variables": ["food_allergens"], "reason": "allergen coverage is unavailable"}]}
     candidates = _foods(conn, patient, resolved)
+    skipped_energy = 0
+    if energy_target := resolved.energy_target_kcal:
+        before = len(candidates)
+        candidates = [f for f in candidates if f["values"].get("energy_kcal", (None, "NOT_ANALYSED"))[0] is not None
+                      and f["values"]["energy_kcal"][1] != "NOT_ANALYSED"]
+        skipped_energy = before - len(candidates)
     if not candidates:
         conn.close()
         return {"status": "INFEASIBLE_PLAN", "foods": [], "slots": [], "nutrients": {},
@@ -110,7 +136,7 @@ def optimize(db: str | Path, patient: dict[str, Any], resolved: Any,
         values = np.array([(f["values"].get("energy_kcal", (0.0,))[0] or 0.0) / 100.0 for f in candidates])
         a_ub.append(values.tolist()); b_ub.append(float(energy * 1.2)); labels.append("energy:max")
         a_ub.append((-values).tolist()); b_ub.append(-float(energy * 0.8)); labels.append("energy:min")
-    bounds = [(0.0, 10000.0)] * n
+    bounds = [(0.0, float(max_food_grams_per_day))] * n
     result = linprog(c, A_ub=np.array(a_ub + soft_ub) if a_ub or soft_ub else None,
                      b_ub=np.array(b_ub + soft_b) if b_ub or soft_b else None,
                      bounds=bounds, method="highs", options={"presolve": True})
@@ -141,11 +167,21 @@ def optimize(db: str | Path, patient: dict[str, Any], resolved: Any,
     grams = [(candidates[i], float(result.x[i])) for i in range(n) if result.x[i] > 1e-7]
     slots = _templates(Path(template_path) if template_path else Path("data/templates/meal_templates.json"))
     plan_foods = [{"food_id": f["id"], "source_code": f["source_code"], "name": f["name"],
-                   "grams": round(g, 6), "approximate": f["approximate"], "basis": "raw_edible_portion"} for f, g in grams]
+                   "grams": round(g, 6), "approximate": f["approximate"], "group_code": f["group_code"],
+                   "basis": "raw_edible_portion"} for f, g in grams]
     conn.close()
-    slot_output = [{"slot": s["slot"], "foods": []} for s in slots]
-    for index, food in enumerate(plan_foods):
-        slot_output[index % len(slot_output)]["foods"].append(food)
+    slot_output = [{"slot": s["slot"], "foods": [], "grams": 0.0, "max_grams": float(s.get("max_grams", 10000))} for s in slots]
+    for food in sorted(plan_foods, key=lambda item: (-item["grams"], item["food_id"])):
+        preferred = [i for i, slot in enumerate(slots) if food["group_code"] in {str(x).upper() for x in slot.get("preferred_groups", [])}]
+        choices = preferred or list(range(len(slots)))
+        choices = sorted(choices, key=lambda i: (slot_output[i]["grams"] + food["grams"] > slot_output[i]["max_grams"],
+                                                  slot_output[i]["grams"], i))
+        chosen = choices[0]
+        slot_output[chosen]["foods"].append(food)
+        slot_output[chosen]["grams"] += food["grams"]
+        food["slot"] = slot_output[chosen]["slot"]
+    for slot in slot_output:
+        slot["grams"] = round(slot["grams"], 6)
     return {"status": "OK", "foods": plan_foods,
             "slots": slot_output,
             "nutrients": {}, "advisories": list(resolved.advisories),
@@ -154,4 +190,5 @@ def optimize(db: str | Path, patient: dict[str, Any], resolved: Any,
             "salt_assumption": "The plan assumes added salt is limited to this amount.",
             "price_objective": "reserved; no price term is used",
             "template_status": "DRAFT_HEURISTIC",
-            "relaxed_soft_bounds": relaxed}
+            "relaxed_soft_bounds": relaxed,
+            "advisories": list(resolved.advisories) + ([{"reason": "foods skipped because energy is missing", "count": skipped_energy}] if skipped_energy else [])}

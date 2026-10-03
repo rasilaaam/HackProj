@@ -6,11 +6,12 @@ from pathlib import Path
 from typing import Any
 
 from dietdb.engine.optimizer import SALT_SODIUM_MG_PER_G
+from dietdb.engine.db import connect_readonly
 
 
 def verify(plan: dict[str, Any], db: str | Path, resolved: Any,
            patient: dict[str, Any] | None = None) -> dict[str, Any]:
-    conn = sqlite3.connect(str(db))
+    conn = connect_readonly(db)
     totals: dict[str, float] = {}
     errors: list[str] = []
     for food in plan.get("foods", []):
@@ -42,6 +43,13 @@ def verify(plan: dict[str, Any], db: str | Path, resolved: Any,
             errors.append(f"{nutrient} exceeds maximum: {value} > {maximum}")
         if minimum is not None and value + 1e-6 < minimum:
             errors.append(f"{nutrient} below minimum: {value} < {minimum}")
+    energy = totals.get("energy_kcal")
+    target = getattr(resolved, "energy_target_kcal", None)
+    if target is not None:
+        if energy is None:
+            errors.append("energy target cannot be verified: no energy data")
+        elif not target * 0.8 - 1e-5 <= energy <= target * 1.2 + 1e-5:
+            errors.append(f"energy outside target window: {energy} not in [{target * 0.8}, {target * 1.2}]")
     conn.close()
     return {"ok": not errors, "errors": errors, "totals": totals,
             "sodium_total_includes_added_salt_g": salt}

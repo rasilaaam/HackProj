@@ -4,6 +4,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from typing import Any
 from pydantic import BaseModel
+from dietdb.engine.db import connect_readonly
 
 
 class Patient(BaseModel):
@@ -11,7 +12,7 @@ class Patient(BaseModel):
 
     @classmethod
     def from_database(cls, values: dict[str, Any], db: str) -> "Patient":
-        conn = sqlite3.connect(db)
+        conn = connect_readonly(db)
         definitions = {r[0]: r for r in conn.execute("SELECT variable_name, data_type, allowed_values, min_value, max_value FROM patient_variables")}
         conn.close()
         unknown = set(values) - set(definitions)
@@ -25,7 +26,7 @@ class Patient(BaseModel):
                 raise ValueError(f"patient value outside plausibility range: {name}")
             if data_type == "BOOLEAN" and value not in {True, False, 0, 1}:
                 raise ValueError(f"patient value for {name} must be boolean")
-            if data_type == "ENUM" and allowed and value not in json.loads(allowed):
+            if data_type == "ENUM" and allowed and str(value).casefold() not in {str(x).casefold() for x in json.loads(allowed)}:
                 raise ValueError(f"invalid value for patient variable: {name}")
         return cls(values=values)
 
@@ -41,6 +42,7 @@ class ResolvedConstraints:
     needs_info: list[dict[str, Any]] = field(default_factory=list)
     conflicts: list[dict[str, Any]] = field(default_factory=list)
     energy_target_kcal: float | None = None
+    applied_rules: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _eval(expr: dict, values: dict[str, Any], missing: set[str]) -> bool | None:
@@ -109,9 +111,10 @@ def _converted(rule: dict[str, Any], patient: dict[str, Any], energy: float | No
 
 
 def resolve(patient: Patient, db: str, mode: str = "production") -> ResolvedConstraints:
-    conn = sqlite3.connect(db)
+    conn = connect_readonly(db)
     columns = [d[0] for d in conn.execute("SELECT * FROM rules LIMIT 0").description]
-    rows = conn.execute("SELECT * FROM rules WHERE status = 'APPROVED' OR (? = 'test' AND status = 'TEST_FIXTURE')", (mode,)).fetchall()
+    rows = conn.execute("""SELECT * FROM rules WHERE status = 'APPROVED'
+        OR (? IN ('test', 'draft-review') AND status IN ('TEST_FIXTURE', 'DRAFT'))""", (mode,)).fetchall()
     result = ResolvedConstraints(energy_target_kcal=_energy(patient.values))
     groups: dict[str, dict[str, list[tuple[dict[str, Any], float | None, float | None]]]] = {}
     for raw in rows:
@@ -123,6 +126,8 @@ def resolve(patient: Patient, db: str, mode: str = "production") -> ResolvedCons
             if rule["enforcement"] in {"HARD", "SOFT"} or rule["tier"] == "SAFETY_CRITICAL": result.status = "INCOMPLETE"
             continue
         if not outcome: continue
+        result.applied_rules.append({"slug": rule["slug"], "rationale": rule["rationale"],
+                                     "source_locator": rule["source_locator"], "target_ref": rule["target_ref"]})
         if rule["slug"].startswith("ckd_dialysis"):
             result.planning_mode, result.status = "CLINICIAN_ONLY_NO_AUTOPLAN", "CLINICIAN_REQUIRED"
         target = rule["target_ref"]

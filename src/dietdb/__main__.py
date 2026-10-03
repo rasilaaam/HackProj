@@ -114,6 +114,7 @@ def main():
     pp.add_argument('--rules-mode', choices=('production', 'test', 'draft-review'), default='production')
     pp.add_argument('--out', required=True)
     pp.add_argument('--added-salt-g-per-day', type=float, default=5.0)
+    pp.add_argument('--max-food-grams-per-day', type=float, default=500.0)
 
     a = p.parse_args()
     if a.cmd == 'build':
@@ -140,26 +141,43 @@ def main():
         from dietdb.engine.constraints import Patient, resolve
         from dietdb.engine.optimizer import optimize
         from dietdb.engine.verifier import verify
+        from dietdb.engine.db import connect_readonly
         from dietdb.rules import load_rules
         patient_values = json.loads(Path(a.patient).read_text())
         rules_dir = 'data/rules/draft' if a.rules_mode == 'draft-review' else 'data/rules'
         load_rules(a.db, rules_dir, a.rules_mode)
         patient = Patient.from_database(patient_values, a.db)
-        resolved = resolve(patient, a.db, 'test' if a.rules_mode == 'test' else 'production')
+        resolved = resolve(patient, a.db, a.rules_mode)
         output = {"status": resolved.status, "needs_info": resolved.needs_info,
                   "advisories": resolved.advisories, "nutrients": resolved.nutrients}
         if resolved.status not in {"INCOMPLETE", "CLINICIAN_REQUIRED", "INFEASIBLE_RULES"}:
-            output["plan"] = optimize(a.db, patient.values, resolved, a.added_salt_g_per_day)
+            output["plan"] = optimize(a.db, patient.values, resolved, a.added_salt_g_per_day,
+                                       max_food_grams_per_day=a.max_food_grams_per_day)
             if output["plan"]["status"] != "OK":
                 output["status"] = output["plan"]["status"]
             else:
+                output["plan"]["foods"] = [f for f in output["plan"]["foods"] if f["grams"] >= 5]
                 checked = verify(output["plan"], a.db, resolved, patient.values)
                 output["verification"] = checked
                 if not checked["ok"]: output["status"] = "VERIFIER_REJECTED"
-        rules = sqlite3.connect(a.db).execute("SELECT slug, rationale, source_locator FROM rules ORDER BY id").fetchall()
-        output["applied_rules"] = [{"slug": r[0], "rationale": r[1], "source_locator": r[2]} for r in rules]
+                with connect_readonly(a.db) as conn:
+                    units = {r[0]: r[1] for r in conn.execute("SELECT canonical_name, canonical_unit FROM nutrients")}
+                nutrient_report = {}
+                for name, bounds in resolved.nutrients.items():
+                    total = checked["totals"].get(name, 0.0)
+                    if name == "sodium": total += a.added_salt_g_per_day * 393.0
+                    nutrient_report[name] = {"total": round(total, 3), "min": bounds.get("min"),
+                        "max": bounds.get("max"), "unit": units.get(name),
+                        "met": (bounds.get("min") is None or total >= bounds["min"]) and
+                               (bounds.get("max") is None or total <= bounds["max"])}
+                energy_total = checked["totals"].get("energy_kcal", 0.0)
+                output["plan"]["nutrients"] = nutrient_report
+                output["plan"]["energy_total_kcal"] = round(energy_total, 3)
+                output["plan"]["pct_of_target"] = round(100 * energy_total / resolved.energy_target_kcal, 3) if resolved.energy_target_kcal else None
+        output["applied_rules"] = resolved.applied_rules
         Path(a.out).write_text(json.dumps(output, indent=2, sort_keys=True) + "\n")
         print(json.dumps({"status": output["status"], "out": a.out}, sort_keys=True))
+        raise SystemExit(2 if output["status"] in {"INFEASIBLE_RULES", "INFEASIBLE_PLAN", "VERIFIER_REJECTED"} else 0)
 
 
 if __name__ == '__main__':
