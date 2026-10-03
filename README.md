@@ -5,7 +5,7 @@ A diet-planning engine for patients with diet-restricting diseases (Type 2 diabe
 ## Features
 
 - 🍎 **542 Indian foods** from IFCT 2017 with complete nutrition data
-- 🧬 **10 core nutrients** tracked with measurement status
+- 🧬 **166 mapped nutrients** tracked with measurement status
 - ✅ **Deterministic database** - identical inputs produce identical builds (verified by hash)
 - 🔍 **No implicit zeros** - missing data is explicitly tracked, never assumed
 - 📋 **Declarative rules** - diet rules are data, validated by schema

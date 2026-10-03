@@ -1,6 +1,8 @@
 # DietDB - Usage Examples
 
-Quick examples of what you can do with DietDB.
+Quick examples of what you can do with DietDB. Build with
+`python -m dietdb build --db data/diet.db` and load rules with
+`python -m dietdb load-rules --db data/diet.db --mode test`.
 
 ## Database Stats
 
