@@ -52,19 +52,23 @@ def seed_reference_data(conn, seed_dir: Path) -> None:
             "INSERT OR IGNORE INTO allergens(code, name, description) VALUES (?, ?, ?)",
             (item["code"], item["name"], item["description"]),
         )
-    for item in json.loads((seed_dir / "patient_variables.json").read_text()):
+    variable_items = json.loads((seed_dir / "patient_variables.json").read_text())
+    extra = seed_dir / "patient_variables_conditions.json"
+    if extra.exists():
+        variable_items.extend(json.loads(extra.read_text()))
+    for item in variable_items:
         conn.execute(
             """INSERT OR REPLACE INTO patient_variables
                (variable_name, display_name, data_type, unit, min_value, max_value, source, description)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (item["variable_name"], item["display_name"], item["data_type"], item.get("unit"),
-             item.get("min_value"), item.get("max_value"), item["source"], item["range_note"]),
+             item.get("min_value"), item.get("max_value"), item["source"], item.get("range_note")),
         )
 
 
 def load_rules(db_path: str | Path, rules_dir: str | Path, mode: str = "production") -> int:
-    if mode not in {"production", "test"}:
-        raise ValueError("mode must be production or test")
+    if mode not in {"production", "test", "draft-review"}:
+        raise ValueError("mode must be production, test, or draft-review")
     conn = __import__("sqlite3").connect(str(db_path))
     conn.execute("PRAGMA foreign_keys = ON")
     root = Path(__file__).resolve().parents[2]
@@ -81,12 +85,16 @@ def load_rules(db_path: str | Path, rules_dir: str | Path, mode: str = "producti
                     rule = Rule.model_validate(raw)
                 except ValidationError as exc:
                     raise ValueError(f"invalid rule in {path.name}: {exc}") from exc
-                if rule.status.value != "APPROVED" and not (mode == "test" and rule.status.value == "TEST_FIXTURE"):
+                allowed = rule.status.value == "APPROVED" or (mode == "test" and rule.status.value == "TEST_FIXTURE") or (mode == "draft-review" and rule.status.value == "DRAFT")
+                if not allowed:
                     raise ValueError(f"rule {rule.slug} has status {rule.status.value}, not loadable in {mode} mode")
                 _validate_expression(rule.applies_when, variables)
+                for variable in (rule.min_from_variable, rule.max_from_variable):
+                    if variable and variable not in variables:
+                        raise ValueError(f"unknown patient variable: {variable}")
                 _validate_target(conn, rule)
                 data = rule.model_dump(mode="json")
-                columns = ["slug", "name", "kind", "target_type", "target_ref", "min_value", "max_value",
+                columns = ["slug", "name", "kind", "target_type", "target_ref", "min_value", "max_value", "min_from_variable", "max_from_variable",
                            "target_value", "tolerance", "unit", "basis", "tier", "enforcement", "applies_when",
                            "rationale", "source_id", "source_locator", "evidence_grade", "status", "version"]
                 values = [json.dumps(data["applies_when"]) if c == "applies_when" else data.get(c) for c in columns]
@@ -95,6 +103,48 @@ def load_rules(db_path: str | Path, rules_dir: str | Path, mode: str = "producti
                     values,
                 )
                 loaded += 1
+        conn.commit()
+        return loaded
+    finally:
+        conn.close()
+
+
+def load_conditions(db_path: str | Path, conditions_path: str | Path) -> int:
+    """Load draft condition metadata and validate every selector expression."""
+    import sqlite3
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("PRAGMA foreign_keys = ON")
+    root = Path(__file__).resolve().parents[2]
+    seed_reference_data(conn, root / "data/seed")
+    variables = {r[0] for r in conn.execute("SELECT variable_name FROM patient_variables")}
+    loaded = 0
+    try:
+        for item in json.loads(Path(conditions_path).read_text()):
+            expression = item.get("eligibility_expression")
+            if isinstance(expression, str):
+                expression = json.loads(expression)
+            if expression:
+                _validate_expression(expression, variables)
+            conn.execute("""INSERT OR REPLACE INTO conditions
+                (slug, name, icd10_code, category, chronicity, planning_mode,
+                 review_interval_months, eligibility_expression, description, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+                item["slug"], item["name"], item.get("icd10_code"), item["category"],
+                item["chronicity"], item["planning_mode"], item.get("review_interval_months"),
+                json.dumps(expression) if expression else None, item.get("description"), item.get("status", "DRAFT")))
+            condition_id = conn.execute("SELECT id FROM conditions WHERE slug = ?", (item["slug"],)).fetchone()[0]
+            for profile in item.get("profiles", []):
+                selector = profile["selector_expression"]
+                if isinstance(selector, str): selector = json.loads(selector)
+                _validate_expression(selector, variables)
+                conn.execute("""INSERT OR REPLACE INTO condition_profiles
+                    (condition_id, slug, name, stage_or_variant, selector_expression,
+                     exclusivity_group, priority, planning_mode_override)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
+                    condition_id, profile["slug"], profile["name"], profile.get("stage_or_variant"),
+                    json.dumps(selector), profile.get("exclusivity_group"), profile.get("priority", 0),
+                    profile.get("planning_mode_override")))
+            loaded += 1
         conn.commit()
         return loaded
     finally:

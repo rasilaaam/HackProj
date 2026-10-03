@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS conditions (
     review_interval_months INTEGER DEFAULT 12,
     eligibility_expression TEXT,
     description TEXT,
+    status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT', 'APPROVED', 'DEPRECATED')),
     source_id INTEGER,
     FOREIGN KEY (source_id) REFERENCES sources(id)
 ) STRICT;
@@ -59,6 +60,7 @@ CREATE TABLE IF NOT EXISTS condition_profiles (
     selector_expression TEXT NOT NULL,
     exclusivity_group TEXT,
     priority INTEGER DEFAULT 0,
+    planning_mode_override TEXT CHECK(planning_mode_override IN ('AUTO_PLAN', 'AUTO_PLAN_WITH_CLINICIAN_CONFIRMATION', 'CLINICIAN_ONLY_NO_AUTOPLAN')),
     FOREIGN KEY (condition_id) REFERENCES conditions(id) ON DELETE CASCADE,
     UNIQUE(condition_id, slug)
 ) STRICT;
@@ -82,6 +84,8 @@ CREATE TABLE IF NOT EXISTS rules (
     target_ref TEXT NOT NULL,
     min_value REAL,
     max_value REAL,
+    min_from_variable TEXT,
+    max_from_variable TEXT,
     target_value REAL,
     tolerance REAL,
     unit TEXT,

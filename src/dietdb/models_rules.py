@@ -21,6 +21,8 @@ class Rule(BaseModel):
     target_ref: str
     min_value: Optional[float] = None
     max_value: Optional[float] = None
+    min_from_variable: Optional[str] = None
+    max_from_variable: Optional[str] = None
     target_value: Optional[float] = None
     tolerance: Optional[float] = None
     unit: Optional[str] = None
