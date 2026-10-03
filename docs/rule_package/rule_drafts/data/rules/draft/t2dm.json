@@ -1,0 +1,86 @@
+[
+  {
+    "slug": "t2dm_sodium_max_2300",
+    "name": "Type 2 diabetes: sodium ceiling",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "sodium",
+    "max_value": 2300,
+    "unit": "mg",
+    "basis": "PER_DAY",
+    "tier": "THERAPEUTIC",
+    "enforcement": "HARD",
+    "applies_when": {
+      "var": "dx_type2_diabetes",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "People with diabetes are advised to keep sodium below 2,300 mg a day, the same limit as for the general population.",
+    "source_locator": "ADA Standards of Care in Diabetes-2026, Section 5 (doi:10.2337/dc26-S005), nutrition/MNT recommendations. DRAFT: figure taken from secondary summaries and ADA patient-education material; primary section text NOT read, verify before approval.",
+    "evidence_grade": "ADA recommendation (grade not verified)",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "t2dm_fibre_min_14_per_1000kcal",
+    "name": "Type 2 diabetes: minimum fibre",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "fiber_total",
+    "min_value": 14,
+    "unit": "g",
+    "basis": "PER_1000_KCAL",
+    "tier": "THERAPEUTIC",
+    "enforcement": "SOFT",
+    "applies_when": {
+      "var": "dx_type2_diabetes",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "Aim for at least 14 g of fibre per 1,000 kcal, mainly from whole grains, legumes, vegetables and fruit.",
+    "source_locator": "ADA Standards of Care in Diabetes-2026, Section 5 (doi:10.2337/dc26-S005), nutrition/MNT recommendations. DRAFT: figure taken from secondary summaries and ADA patient-education material; primary section text NOT read, verify before approval.",
+    "evidence_grade": "ADA recommendation (grade not verified)",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "t2dm_no_fixed_macro_split",
+    "name": "Type 2 diabetes: no fixed carbohydrate percentage",
+    "kind": "ADVISORY_TEXT",
+    "target_type": "NUTRIENT",
+    "target_ref": "carbohydrate",
+    "basis": "PER_DAY",
+    "tier": "THERAPEUTIC",
+    "enforcement": "ADVISORY",
+    "applies_when": {
+      "var": "dx_type2_diabetes",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "There is no single ideal split of carbohydrate, protein and fat for diabetes; the amount and type of carbohydrate should be individualised with a dietitian.",
+    "source_locator": "ADA Standards of Care in Diabetes-2026, Section 5 (doi:10.2337/dc26-S005), nutrition/MNT recommendations. DRAFT: figure taken from secondary summaries and ADA patient-education material; primary section text NOT read, verify before approval. Consensus: ADA/EASD Nutrition Therapy Consensus Report 2019.",
+    "evidence_grade": "ADA consensus statement",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "t2dm_avoid_sugary_drinks",
+    "name": "Type 2 diabetes: avoid sugar-sweetened drinks",
+    "kind": "ADVISORY_TEXT",
+    "target_type": "TAG",
+    "target_ref": "sugar_sweetened_beverage",
+    "basis": "PER_DAY",
+    "tier": "THERAPEUTIC",
+    "enforcement": "ADVISORY",
+    "applies_when": {
+      "var": "dx_type2_diabetes",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "Choose water or zero-calorie drinks instead of sugar-sweetened drinks.",
+    "source_locator": "ADA Standards of Care in Diabetes-2026, Section 5 (doi:10.2337/dc26-S005), nutrition/MNT recommendations. DRAFT: figure taken from secondary summaries and ADA patient-education material; primary section text NOT read, verify before approval.",
+    "evidence_grade": "ADA recommendation (grade not verified)",
+    "status": "DRAFT",
+    "version": 1
+  }
+]

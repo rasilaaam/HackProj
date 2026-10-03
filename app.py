@@ -8,8 +8,7 @@ import streamlit as st
 from dietdb.__main__ import build_database
 from dietdb.engine.constraints import Patient, resolve
 from dietdb.engine.db import connect_readonly
-from dietdb.engine.optimizer import optimize
-from dietdb.engine.verifier import verify
+from dietdb.engine.planner import make_plan
 from dietdb.rules import load_conditions, load_rules
 
 
@@ -65,18 +64,22 @@ def main() -> None:
             st.info("Enter patient information first.")
             return
         try:
-            patient = Patient.from_database(values, db)
-            resolved = resolve(patient, db, "production")
-            result = {"status": resolved.status, "needs_info": resolved.needs_info, "advisories": resolved.advisories,
-                      "applied_rules": resolved.applied_rules}
-            if resolved.status == "OK":
-                plan = optimize(db, values, resolved)
-                result["plan"] = plan
-                if plan["status"] == "OK": result["verification"] = verify(plan, db, resolved, values)
-            st.json(result)
-            for rule in resolved.applied_rules:
-                st.caption(f"{rule['slug']}: {rule['rationale']} ({rule['source_locator']})")
-            st.download_button("Download JSON", json.dumps(result, indent=2), "dietdb-plan.json", "application/json")
+            result = make_plan(db, values, "draft-review")
+            st.warning(result.get("banner") or "RULES ARE UNREVIEWED DRAFTS: not clinical advice")
+            st.subheader(f"Status: {result['status']}")
+            if result.get("needs_info"):
+                st.info("More information is needed: " + "; ".join(sorted({v for n in result["needs_info"] for v in n.get("variables", [])})))
+            if result.get("message"):
+                st.error(result["message"])
+            for slot, items in (result.get("plan") or {}).get("slots", {}).items():
+                st.markdown(f"**{slot.title()}**: " + ", ".join(f"{i['name']} {i['grams']} g" for i in items))
+            if result.get("plan"):
+                st.caption(f"Added salt allowance: {result['plan']['added_salt_allowance_g']} g per day. Weights are raw edible portion.")
+                st.json(result["verification"]["totals"])
+            st.json({k: result.get(k) for k in ("assumptions", "advisories", "diagnostics")})
+            for rule in result.get("rules_applied", []):
+                st.caption(f"{rule['slug']} ({rule['status']}): {rule['rationale']} [{rule['source_locator']}]")
+            st.download_button("Download JSON", json.dumps(result, indent=2, default=list), "dietdb-plan.json", "application/json")
         except ValueError as exc:
             st.error(str(exc))
     else:

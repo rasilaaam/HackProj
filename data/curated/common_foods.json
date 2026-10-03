@@ -1,0 +1,476 @@
+{
+ "status": "DRAFT_HEURISTIC",
+ "note": "Commonly eaten foods chosen by the drafter so plans look like ordinary Indian meals. Not clinical. Beef, pork, offal, and most exotic items are excluded on purpose. A dietitian or the owner should edit this list.",
+ "foods": [
+  {
+   "source_code": "A003",
+   "name": "Bajra",
+   "group": "A"
+  },
+  {
+   "source_code": "A004",
+   "name": "Barley",
+   "group": "A"
+  },
+  {
+   "source_code": "A005",
+   "name": "Jowar",
+   "group": "A"
+  },
+  {
+   "source_code": "A010",
+   "name": "Ragi",
+   "group": "A"
+  },
+  {
+   "source_code": "A011",
+   "name": "Rice flakes",
+   "group": "A"
+  },
+  {
+   "source_code": "A013",
+   "name": "Rice, raw, brown",
+   "group": "A"
+  },
+  {
+   "source_code": "A014",
+   "name": "Rice, parboiled, milled",
+   "group": "A"
+  },
+  {
+   "source_code": "A015",
+   "name": "Rice, raw, milled",
+   "group": "A"
+  },
+  {
+   "source_code": "A019",
+   "name": "Wheat flour, atta",
+   "group": "A"
+  },
+  {
+   "source_code": "A020",
+   "name": "Wheat, whole",
+   "group": "A"
+  },
+  {
+   "source_code": "A022",
+   "name": "Wheat, semolina",
+   "group": "A"
+  },
+  {
+   "source_code": "B001",
+   "name": "Bengal gram, dal",
+   "group": "B"
+  },
+  {
+   "source_code": "B002",
+   "name": "Bengal gram, whole",
+   "group": "B"
+  },
+  {
+   "source_code": "B003",
+   "name": "Black gram, dal",
+   "group": "B"
+  },
+  {
+   "source_code": "B005",
+   "name": "Cowpea, brown",
+   "group": "B"
+  },
+  {
+   "source_code": "B010",
+   "name": "Green gram, dal",
+   "group": "B"
+  },
+  {
+   "source_code": "B011",
+   "name": "Green gram, whole",
+   "group": "B"
+  },
+  {
+   "source_code": "B013",
+   "name": "Lentil dal",
+   "group": "B"
+  },
+  {
+   "source_code": "B017",
+   "name": "Peas, dry",
+   "group": "B"
+  },
+  {
+   "source_code": "B018",
+   "name": "Rajmah, black",
+   "group": "B"
+  },
+  {
+   "source_code": "B020",
+   "name": "Rajmah, red",
+   "group": "B"
+  },
+  {
+   "source_code": "B021",
+   "name": "Red gram, dal",
+   "group": "B"
+  },
+  {
+   "source_code": "C002",
+   "name": "Amaranth leaves, green",
+   "group": "C"
+  },
+  {
+   "source_code": "C008",
+   "name": "Bathua leaves",
+   "group": "C"
+  },
+  {
+   "source_code": "C015",
+   "name": "Cabbage, green",
+   "group": "C"
+  },
+  {
+   "source_code": "C020",
+   "name": "Fenugreek leaves",
+   "group": "C"
+  },
+  {
+   "source_code": "C026",
+   "name": "Mustard leaves",
+   "group": "C"
+  },
+  {
+   "source_code": "C033",
+   "name": "Spinach",
+   "group": "C"
+  },
+  {
+   "source_code": "D001",
+   "name": "Ash gourd",
+   "group": "D"
+  },
+  {
+   "source_code": "D004",
+   "name": "Bitter gourd, jagged, teeth ridges, elongate",
+   "group": "D"
+  },
+  {
+   "source_code": "D007",
+   "name": "Bottle gourd, elongate, pale green",
+   "group": "D"
+  },
+  {
+   "source_code": "D031",
+   "name": "Brinjal - all varieties",
+   "group": "D"
+  },
+  {
+   "source_code": "D033",
+   "name": "Capsicum, green",
+   "group": "D"
+  },
+  {
+   "source_code": "D036",
+   "name": "Cauliflower",
+   "group": "D"
+  },
+  {
+   "source_code": "D039",
+   "name": "Cluster beans",
+   "group": "D"
+  },
+  {
+   "source_code": "D043",
+   "name": "Cucumber, green, elongate",
+   "group": "D"
+  },
+  {
+   "source_code": "D046",
+   "name": "Drumstick",
+   "group": "D"
+  },
+  {
+   "source_code": "D049",
+   "name": "French beans, country",
+   "group": "D"
+  },
+  {
+   "source_code": "D053",
+   "name": "Knol - Khol",
+   "group": "D"
+  },
+  {
+   "source_code": "D056",
+   "name": "Ladies finger",
+   "group": "D"
+  },
+  {
+   "source_code": "D059",
+   "name": "Papaya, raw",
+   "group": "D"
+  },
+  {
+   "source_code": "D060",
+   "name": "Parwar",
+   "group": "D"
+  },
+  {
+   "source_code": "D061",
+   "name": "Peas, fresh",
+   "group": "D"
+  },
+  {
+   "source_code": "D066",
+   "name": "Pumpkin, orange, round",
+   "group": "D"
+  },
+  {
+   "source_code": "D068",
+   "name": "Ridge gourd",
+   "group": "D"
+  },
+  {
+   "source_code": "D073",
+   "name": "Tinda, tender",
+   "group": "D"
+  },
+  {
+   "source_code": "D075",
+   "name": "Tomato, ripe, hybrid",
+   "group": "D"
+  },
+  {
+   "source_code": "D076",
+   "name": "Tomato, ripe, local",
+   "group": "D"
+  },
+  {
+   "source_code": "E001",
+   "name": "Apple, big",
+   "group": "E"
+  },
+  {
+   "source_code": "E012",
+   "name": "Banana, ripe, robusta",
+   "group": "E"
+  },
+  {
+   "source_code": "E021",
+   "name": "Goosberry",
+   "group": "E"
+  },
+  {
+   "source_code": "E028",
+   "name": "Guava, white flesh",
+   "group": "E"
+  },
+  {
+   "source_code": "E029",
+   "name": "Guava, pink flesh",
+   "group": "E"
+  },
+  {
+   "source_code": "E045",
+   "name": "Musk melon, orange flesh",
+   "group": "E"
+  },
+  {
+   "source_code": "E047",
+   "name": "Orange, pulp",
+   "group": "E"
+  },
+  {
+   "source_code": "E049",
+   "name": "Papaya, ripe",
+   "group": "E"
+  },
+  {
+   "source_code": "E051",
+   "name": "Pear",
+   "group": "E"
+  },
+  {
+   "source_code": "E053",
+   "name": "Pineapple",
+   "group": "E"
+  },
+  {
+   "source_code": "E055",
+   "name": "Pomegranate, maroon seeds",
+   "group": "E"
+  },
+  {
+   "source_code": "E065",
+   "name": "Water melon, dark green (sugar baby)",
+   "group": "E"
+  },
+  {
+   "source_code": "F001",
+   "name": "Beet root",
+   "group": "F"
+  },
+  {
+   "source_code": "F002",
+   "name": "Carrot, orange",
+   "group": "F"
+  },
+  {
+   "source_code": "F004",
+   "name": "Colocasia",
+   "group": "F"
+  },
+  {
+   "source_code": "F006",
+   "name": "Potato, brown skin, big",
+   "group": "F"
+  },
+  {
+   "source_code": "F010",
+   "name": "Radish, elongate, white skin",
+   "group": "F"
+  },
+  {
+   "source_code": "F013",
+   "name": "Sweet potato, brown skin",
+   "group": "F"
+  },
+  {
+   "source_code": "F018",
+   "name": "Yam, ordinary",
+   "group": "F"
+  },
+  {
+   "source_code": "H001",
+   "name": "Almond",
+   "group": "H"
+  },
+  {
+   "source_code": "H005",
+   "name": "Cashew nut",
+   "group": "H"
+  },
+  {
+   "source_code": "H007",
+   "name": "Coconut, kernel, fresh",
+   "group": "H"
+  },
+  {
+   "source_code": "H012",
+   "name": "Ground nut",
+   "group": "H"
+  },
+  {
+   "source_code": "H014",
+   "name": "Linseeds",
+   "group": "H"
+  },
+  {
+   "source_code": "H021",
+   "name": "Walnut",
+   "group": "H"
+  },
+  {
+   "source_code": "L001",
+   "name": "Milk, whole, Buffalo",
+   "group": "L"
+  },
+  {
+   "source_code": "L002",
+   "name": "Milk, whole, Cow",
+   "group": "L"
+  },
+  {
+   "source_code": "L003",
+   "name": "Paneer",
+   "group": "L"
+  },
+  {
+   "source_code": "M004",
+   "name": "Egg, poultry, whole, boiled",
+   "group": "M"
+  },
+  {
+   "source_code": "M007",
+   "name": "Egg, poultry, omlet",
+   "group": "M"
+  },
+  {
+   "source_code": "N001",
+   "name": "Chicken, poultry, leg, skinless",
+   "group": "N"
+  },
+  {
+   "source_code": "N002",
+   "name": "Chicken, poultry, thigh, skinless",
+   "group": "N"
+  },
+  {
+   "source_code": "N003",
+   "name": "Chicken, poultry, breast, skinless",
+   "group": "N"
+  },
+  {
+   "source_code": "O001",
+   "name": "Goat, shoulder, meat",
+   "group": "O"
+  },
+  {
+   "source_code": "O014",
+   "name": "Sheep, shoulder",
+   "group": "O"
+  },
+  {
+   "source_code": "P003",
+   "name": "Anchovy",
+   "group": "P"
+  },
+  {
+   "source_code": "P017",
+   "name": "Hilsa",
+   "group": "P"
+  },
+  {
+   "source_code": "S002",
+   "name": "Catla",
+   "group": "S"
+  },
+  {
+   "source_code": "S006",
+   "name": "Rohu",
+   "group": "S"
+  },
+  {
+   "source_code": "S008",
+   "name": "Prawns, big",
+   "group": "S"
+  },
+  {
+   "source_code": "G017",
+   "name": "Onion, big",
+   "group": "G"
+  },
+  {
+   "source_code": "G011",
+   "name": "Garlic, big clove",
+   "group": "G"
+  },
+  {
+   "source_code": "G014",
+   "name": "Ginger, fresh",
+   "group": "G"
+  },
+  {
+   "source_code": "G009",
+   "name": "Coriander leaves",
+   "group": "G"
+  },
+  {
+   "source_code": "G016",
+   "name": "Mint leaves",
+   "group": "G"
+  },
+  {
+   "source_code": "G010",
+   "name": "Curry leaves",
+   "group": "G"
+  }
+ ]
+}

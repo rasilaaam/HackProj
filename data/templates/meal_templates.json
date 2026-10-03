@@ -1,10 +1,249 @@
 {
-  "status": "DRAFT_HEURISTIC",
-  "basis": "raw_edible_portion",
-  "slots": [
-    {"slot": "breakfast", "min_grams": 0, "max_grams": 10000, "preferred_groups": ["A", "B", "C"]},
-    {"slot": "lunch", "min_grams": 0, "max_grams": 10000, "preferred_groups": ["D", "E", "F", "G"]},
-    {"slot": "dinner", "min_grams": 0, "max_grams": 10000, "preferred_groups": ["D", "E", "F", "G"]},
-    {"slot": "snack", "min_grams": 0, "max_grams": 10000, "preferred_groups": ["H", "I", "J"]}
-  ]
+ "status": "DRAFT_HEURISTIC",
+ "note": "Product-design placeholders for meal structure, NOT clinical values. Group letters are IFCT groups. Ranges are grams of raw edible portion per slot. A dietitian should review before real use.",
+ "energy_tolerance": 0.1,
+ "slots": {
+  "breakfast": {
+   "energy_share": [
+    0.15,
+    0.35
+   ],
+   "groups": {
+    "A": [
+     30,
+     150
+    ],
+    "B": [
+     0,
+     60
+    ],
+    "L": [
+     0,
+     300
+    ],
+    "M": [
+     0,
+     100
+    ],
+    "E": [
+     0,
+     200
+    ],
+    "F": [
+     0,
+     150
+    ],
+    "D": [
+     0,
+     100
+    ],
+    "H": [
+     0,
+     30
+    ],
+    "I": [
+     0,
+     15
+    ]
+   }
+  },
+  "lunch": {
+   "energy_share": [
+    0.25,
+    0.45
+   ],
+   "groups": {
+    "A": [
+     60,
+     200
+    ],
+    "B": [
+     20,
+     100
+    ],
+    "C": [
+     0,
+     100
+    ],
+    "D": [
+     50,
+     250
+    ],
+    "F": [
+     0,
+     150
+    ],
+    "L": [
+     0,
+     250
+    ],
+    "M": [
+     0,
+     120
+    ],
+    "N": [
+     0,
+     120
+    ],
+    "O": [
+     0,
+     120
+    ],
+    "P": [
+     0,
+     120
+    ],
+    "Q": [
+     0,
+     100
+    ],
+    "R": [
+     0,
+     100
+    ],
+    "S": [
+     0,
+     120
+    ],
+    "J": [
+     0,
+     100
+    ],
+    "G": [
+     0,
+     15
+    ],
+    "H": [
+     0,
+     20
+    ]
+   }
+  },
+  "snack": {
+   "energy_share": [
+    0.05,
+    0.2
+   ],
+   "groups": {
+    "E": [
+     0,
+     250
+    ],
+    "H": [
+     0,
+     30
+    ],
+    "L": [
+     0,
+     250
+    ],
+    "B": [
+     0,
+     50
+    ],
+    "F": [
+     0,
+     100
+    ],
+    "I": [
+     0,
+     15
+    ]
+   }
+  },
+  "dinner": {
+   "energy_share": [
+    0.2,
+    0.4
+   ],
+   "groups": {
+    "A": [
+     50,
+     180
+    ],
+    "B": [
+     20,
+     100
+    ],
+    "C": [
+     0,
+     100
+    ],
+    "D": [
+     50,
+     250
+    ],
+    "F": [
+     0,
+     100
+    ],
+    "L": [
+     0,
+     250
+    ],
+    "M": [
+     0,
+     120
+    ],
+    "N": [
+     0,
+     120
+    ],
+    "O": [
+     0,
+     120
+    ],
+    "P": [
+     0,
+     120
+    ],
+    "Q": [
+     0,
+     100
+    ],
+    "R": [
+     0,
+     100
+    ],
+    "S": [
+     0,
+     120
+    ],
+    "J": [
+     0,
+     100
+    ],
+    "G": [
+     0,
+     15
+    ]
+   }
+  }
+ },
+ "per_food_max_g_by_group": {
+  "A": 150,
+  "B": 60,
+  "C": 100,
+  "D": 150,
+  "E": 200,
+  "F": 150,
+  "G": 15,
+  "H": 25,
+  "I": 15,
+  "J": 100,
+  "L": 250,
+  "M": 100,
+  "N": 120,
+  "O": 100,
+  "P": 120,
+  "Q": 100,
+  "R": 100,
+  "S": 120
+ },
+ "per_food_max_g_default": 200,
+ "excluded_groups": [
+  "K",
+  "T"
+ ],
+ "max_foods_per_slot_group": 2
 }

@@ -1,0 +1,87 @@
+[
+  {
+    "slug": "type2_diabetes",
+    "name": "Type 2 diabetes mellitus",
+    "icd10_code": "E11",
+    "category": "endocrine_metabolic",
+    "chronicity": "REVERSIBLE",
+    "planning_mode": "AUTO_PLAN_WITH_CLINICIAN_CONFIRMATION",
+    "review_interval_months": 6,
+    "eligibility_expression": "{\"var\": \"age_years\", \"op\": \">=\", \"value\": 18}",
+    "description": "PROPOSED by drafter, reviewer to confirm: planning mode and review interval are not from a source. Adult guidelines only.",
+    "status": "DRAFT"
+  },
+  {
+    "slug": "chronic_kidney_disease",
+    "name": "Chronic kidney disease",
+    "icd10_code": "N18",
+    "category": "renal",
+    "chronicity": "LIFELONG_INCURABLE",
+    "planning_mode": "AUTO_PLAN_WITH_CLINICIAN_CONFIRMATION",
+    "review_interval_months": 3,
+    "eligibility_expression": "{\"var\": \"age_years\", \"op\": \">=\", \"value\": 18}",
+    "description": "PROPOSED by drafter, reviewer to confirm. Potassium and phosphorus limits must be clinician-supplied. Dialysis is CLINICIAN_ONLY (see profile).",
+    "status": "DRAFT",
+    "profiles": [
+      {
+        "slug": "ckd_non_dialysis_g3_g5",
+        "name": "CKD G3-G5 not on dialysis",
+        "stage_or_variant": "G3-G5, no KRT",
+        "selector_expression": {
+          "and": [
+            {
+              "var": "dx_ckd",
+              "op": "==",
+              "value": true
+            },
+            {
+              "var": "renal_replacement",
+              "op": "==",
+              "value": "none"
+            },
+            {
+              "var": "egfr_ml_min_1_73m2",
+              "op": "<",
+              "value": 60
+            },
+            {
+              "var": "age_years",
+              "op": ">=",
+              "value": 18
+            }
+          ]
+        },
+        "exclusivity_group": "ckd_stage",
+        "priority": 1
+      },
+      {
+        "slug": "ckd_dialysis",
+        "name": "CKD on dialysis",
+        "stage_or_variant": "HD/PD",
+        "selector_expression": {
+          "var": "renal_replacement",
+          "op": "in",
+          "value": [
+            "hemodialysis",
+            "peritoneal_dialysis"
+          ]
+        },
+        "exclusivity_group": "ckd_stage",
+        "priority": 2,
+        "planning_mode_override": "CLINICIAN_ONLY_NO_AUTOPLAN"
+      }
+    ]
+  },
+  {
+    "slug": "hypertension",
+    "name": "Essential (primary) hypertension",
+    "icd10_code": "I10",
+    "category": "cardiovascular",
+    "chronicity": "LIFELONG_MANAGEABLE",
+    "planning_mode": "AUTO_PLAN",
+    "review_interval_months": 6,
+    "eligibility_expression": "{\"var\": \"age_years\", \"op\": \">=\", \"value\": 18}",
+    "description": "PROPOSED by drafter, reviewer to confirm. Adult guidelines only.",
+    "status": "DRAFT"
+  }
+]

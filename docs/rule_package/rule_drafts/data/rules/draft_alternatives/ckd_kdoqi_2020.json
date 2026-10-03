@@ -1,0 +1,153 @@
+[
+  {
+    "slug": "alt_kdoqi_protein_nondiabetic_0_55_0_60_ibw",
+    "name": "ALTERNATIVE (KDOQI): CKD 3-5 non-diabetic protein",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "protein",
+    "min_value": 0.55,
+    "max_value": 0.6,
+    "unit": "g",
+    "basis": "PER_KG_IDEAL_WEIGHT",
+    "tier": "THERAPEUTIC",
+    "enforcement": "SOFT",
+    "applies_when": {
+      "and": [
+        {
+          "and": [
+            {
+              "var": "dx_ckd",
+              "op": "==",
+              "value": true
+            },
+            {
+              "var": "renal_replacement",
+              "op": "==",
+              "value": "none"
+            },
+            {
+              "var": "egfr_ml_min_1_73m2",
+              "op": "<",
+              "value": 60
+            },
+            {
+              "var": "age_years",
+              "op": ">=",
+              "value": 18
+            }
+          ]
+        },
+        {
+          "var": "dx_type2_diabetes",
+          "op": "==",
+          "value": false
+        }
+      ]
+    },
+    "rationale": "KDOQI alternative to KDIGO (do not load both).",
+    "source_locator": "KDOQI Clinical Practice Guideline for Nutrition in CKD: 2020 Update, Am J Kidney Dis 2020;76(3 Suppl 1):S1-S107. DRAFT: values taken from published summaries/tables, primary text not read. Metabolically stable adults. Needs ideal-body-weight support in the engine.",
+    "evidence_grade": "KDOQI 2020",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "alt_kdoqi_protein_diabetic_0_6_0_8_ibw",
+    "name": "ALTERNATIVE (KDOQI): CKD 3-5 with diabetes protein",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "protein",
+    "min_value": 0.6,
+    "max_value": 0.8,
+    "unit": "g",
+    "basis": "PER_KG_IDEAL_WEIGHT",
+    "tier": "THERAPEUTIC",
+    "enforcement": "SOFT",
+    "applies_when": {
+      "and": [
+        {
+          "and": [
+            {
+              "var": "dx_ckd",
+              "op": "==",
+              "value": true
+            },
+            {
+              "var": "renal_replacement",
+              "op": "==",
+              "value": "none"
+            },
+            {
+              "var": "egfr_ml_min_1_73m2",
+              "op": "<",
+              "value": 60
+            },
+            {
+              "var": "age_years",
+              "op": ">=",
+              "value": 18
+            }
+          ]
+        },
+        {
+          "var": "dx_type2_diabetes",
+          "op": "==",
+          "value": true
+        }
+      ]
+    },
+    "rationale": "KDOQI alternative to KDIGO (do not load both).",
+    "source_locator": "KDOQI Clinical Practice Guideline for Nutrition in CKD: 2020 Update, Am J Kidney Dis 2020;76(3 Suppl 1):S1-S107. DRAFT: values taken from published summaries/tables, primary text not read. Metabolically stable adults. Needs ideal-body-weight support in the engine.",
+    "evidence_grade": "KDOQI 2020",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "alt_kdoqi_protein_dialysis_1_0_1_2_ibw",
+    "name": "ALTERNATIVE (KDOQI): dialysis protein",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "protein",
+    "min_value": 1.0,
+    "max_value": 1.2,
+    "unit": "g",
+    "basis": "PER_KG_IDEAL_WEIGHT",
+    "tier": "THERAPEUTIC",
+    "enforcement": "SOFT",
+    "applies_when": {
+      "var": "renal_replacement",
+      "op": "in",
+      "value": [
+        "hemodialysis",
+        "peritoneal_dialysis"
+      ]
+    },
+    "rationale": "Clinician must confirm; shown for review only.",
+    "source_locator": "KDOQI Clinical Practice Guideline for Nutrition in CKD: 2020 Update, Am J Kidney Dis 2020;76(3 Suppl 1):S1-S107. DRAFT: values taken from published summaries/tables, primary text not read. Maintenance haemodialysis/peritoneal dialysis, metabolically stable.",
+    "evidence_grade": "KDOQI 2020",
+    "status": "DRAFT",
+    "version": 1
+  },
+  {
+    "slug": "alt_kdoqi_energy_25_35_ibw",
+    "name": "ALTERNATIVE (KDOQI): CKD energy 25-35 kcal/kg ideal weight",
+    "kind": "NUTRIENT_BOUND",
+    "target_type": "NUTRIENT",
+    "target_ref": "energy_kcal",
+    "min_value": 25,
+    "max_value": 35,
+    "unit": "kcal",
+    "basis": "PER_KG_IDEAL_WEIGHT",
+    "tier": "THERAPEUTIC",
+    "enforcement": "SOFT",
+    "applies_when": {
+      "var": "dx_ckd",
+      "op": "==",
+      "value": true
+    },
+    "rationale": "KDOQI energy range for CKD 1-5D; adjust to age, sex, activity and condition.",
+    "source_locator": "KDOQI Clinical Practice Guideline for Nutrition in CKD: 2020 Update, Am J Kidney Dis 2020;76(3 Suppl 1):S1-S107. DRAFT: values taken from published summaries/tables, primary text not read. Needs ideal-body-weight support in the engine.",
+    "evidence_grade": "KDOQI 2020",
+    "status": "DRAFT",
+    "version": 1
+  }
+]

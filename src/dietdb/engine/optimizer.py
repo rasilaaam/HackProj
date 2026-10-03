@@ -1,194 +1,260 @@
-"""Deterministic linear optimizer for raw edible food portions."""
+"""Deterministic one-day meal-plan optimizer (linear programming, no language model).
+
+Every number comes from the database. HARD bounds are strict constraints (with a small safety margin so
+that rounding to whole grams cannot break them); SOFT bounds are constraints too but are relaxed with a
+heavy penalty when the plan would otherwise be impossible. Added salt is a decision variable, so the plan
+reports how much salt the patient may add on top of the (natural) sodium in IFCT foods.
+"""
 from __future__ import annotations
 
 import json
+import math
 import sqlite3
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 from scipy.optimize import linprog
-from dietdb.engine.db import connect_readonly
+from scipy.sparse import lil_matrix
+
+SALT_SODIUM_MG_PER_G = 393.4  # sodium mass fraction of NaCl (22.99 / 58.44)
+REPORT_NUTRIENTS = ("energy_kcal", "protein", "carbohydrate", "fat_total", "fiber_total", "sodium",
+                    "potassium", "phosphorus", "calcium", "magnesium", "iron")
+MARGIN = 0.01
+MIN_PORTION_G = 10.0
+DIET_TAG = {"vegetarian": "VEGETARIAN", "vegan": "VEGETARIAN", "eggetarian": "EGGETARIAN",
+            "fishetarian": "FISHETARIAN", "non_vegetarian": None}
 
 
-SALT_SODIUM_MG_PER_G = 393.0
+@dataclass
+class Candidate:
+    food_id: int
+    code: str
+    name: str
+    group: str
+    values: dict[str, float]
+    approximate: bool = False
 
 
-def _allergy_codes(value: Any) -> set[str]:
-    if value is None:
-        return set()
-    if isinstance(value, str):
-        try:
-            value = json.loads(value)
-        except json.JSONDecodeError:
-            value = [x.strip() for x in value.split(",") if x.strip()]
-    return {str(x).strip().lower() for x in value}
+@dataclass
+class PlanResult:
+    status: str                      # OK | INFEASIBLE_PLAN | NO_CANDIDATES
+    items: list[dict[str, Any]] = field(default_factory=list)
+    salt_g: float = 0.0
+    diagnostics: dict[str, Any] = field(default_factory=dict)
 
 
-def _diet_code(value: Any) -> str | None:
-    if not value:
-        return None
-    return {"veg": "VEGETARIAN", "vegetarian": "VEGETARIAN", "non-veg": "NONVEG",
-            "nonveg": "NONVEG", "non vegetarian": "NONVEG"}.get(
-                str(value).strip().lower(), str(value).strip().upper())
+def load_template(path: str | Path) -> dict[str, Any]:
+    return json.loads(Path(path).read_text())
 
 
-def _foods(conn: sqlite3.Connection, patient: dict[str, Any], resolved: Any) -> list[dict[str, Any]]:
-    rows = conn.execute("""SELECT f.id, f.source_code, f.english_name, f.food_group_id, upper(g.code)
-        FROM foods f LEFT JOIN food_groups g ON g.id=f.food_group_id ORDER BY f.id""").fetchall()
-    allergy_codes = _allergy_codes(patient.get("allergy_list"))
-    excluded = set(resolved.food_exclusions)
-    diet = _diet_code(patient.get("dietary_pattern"))
-    candidates = []
-    hard_upper = {n for n, b in resolved.nutrients.items()
-                  if b.get("max") is not None and ("hard" in b or not b.get("soft"))}
-    for food_id, source_code, name, group_id, group_code in rows:
-        if source_code in excluded:
-            continue
-        if allergy_codes:
-            placeholders = ",".join("?" * len(allergy_codes))
-            found = conn.execute(f"""SELECT 1 FROM food_allergens fa JOIN allergens a ON a.id=fa.allergen_id
-                WHERE fa.food_id=? AND a.code IN ({placeholders}) AND fa.presence IN ('PRESENT','UNKNOWN') LIMIT 1""",
-                [food_id, *sorted(allergy_codes)]).fetchone()
-            if found:
-                continue
-        if diet:
-            compatible = conn.execute("""SELECT 1 FROM diet_type_tags dt JOIN diet_types d ON d.id=dt.diet_type_id
-                WHERE dt.food_id=? AND upper(d.code)=? AND dt.is_compatible=1 LIMIT 1""", (food_id, diet)).fetchone()
-            if compatible is None:
-                continue
-        values = {r[0]: r[1:] for r in conn.execute("""SELECT n.canonical_name, fn.value_canonical,
-            fn.value_status FROM food_nutrients fn JOIN nutrients n ON n.id=fn.nutrient_id WHERE fn.food_id=?""", (food_id,))}
-        if any(n not in values or values[n][0] is None or values[n][1] == "NOT_ANALYSED" for n in hard_upper):
-            continue
-        approximate = any(v[1] == "NOT_DETECTED" for v in values.values())
-        candidates.append({"id": food_id, "source_code": source_code, "name": name,
-                           "food_group_id": group_id, "group_code": group_code, "values": values, "approximate": approximate})
-    return candidates
+def allergen_codes(value: Any) -> list[str]:
+    if value is None: return []
+    items = value if isinstance(value, (list, tuple)) else str(value).split(",")
+    return sorted({str(x).strip().lower() for x in items if str(x).strip()})
 
 
-def _templates(path: Path | None) -> list[dict[str, Any]]:
-    if path and path.exists():
-        return json.loads(path.read_text())["slots"]
-    return [{"slot": "any", "min_grams": 0, "max_grams": 10000}]
+def bounds_of(resolved: dict[str, Any]) -> dict[str, dict[str, dict[str, float | None]]]:
+    """Split a ResolvedConstraints.nutrients entry into hard and soft bound dicts."""
+    out: dict[str, dict[str, dict[str, float | None]]] = {}
+    for nutrient, entry in resolved.items():
+        hard = entry.get("hard")
+        soft = entry.get("soft")
+        if hard is None and soft is None:
+            hard = {"min": entry.get("min"), "max": entry.get("max")}
+        out[nutrient] = {"hard": hard or {"min": None, "max": None}, "soft": soft or {"min": None, "max": None}}
+    return out
 
 
-def optimize(db: str | Path, patient: dict[str, Any], resolved: Any,
-             added_salt_g_per_day: float = 5.0, template_path: str | Path | None = None,
-             max_food_grams_per_day: float = 500.0) -> dict[str, Any]:
-    """Return a deterministic plan, never claiming success for an unverified LP."""
-    conn = connect_readonly(db)
-    allergies = _allergy_codes(patient.get("allergy_list"))
-    if allergies:
-        marks = ",".join("?" * len(allergies))
-        known = conn.execute(f"SELECT count(*) FROM allergens WHERE lower(code) IN ({marks})", list(allergies)).fetchone()[0]
-        tagged = conn.execute(f"""SELECT count(*) FROM food_allergens fa JOIN allergens a ON a.id=fa.allergen_id
-            WHERE lower(a.code) IN ({marks})""", list(allergies)).fetchone()[0]
-        if not known or not tagged:
-            conn.close()
-            return {"status": "INCOMPLETE", "foods": [], "slots": [], "nutrients": {},
-                    "needs_info": [{"variables": ["food_allergens"], "reason": "allergen coverage is unavailable"}]}
-    candidates = _foods(conn, patient, resolved)
-    skipped_energy = 0
-    if energy_target := resolved.energy_target_kcal:
-        before = len(candidates)
-        candidates = [f for f in candidates if f["values"].get("energy_kcal", (None, "NOT_ANALYSED"))[0] is not None
-                      and f["values"]["energy_kcal"][1] != "NOT_ANALYSED"]
-        skipped_energy = before - len(candidates)
+def load_candidates(conn: sqlite3.Connection, needed: set[str], max_bounded: set[str], template: dict[str, Any],
+                    allergens: list[str], pattern: str, allowed_codes: set[str] | None = None) -> tuple[list[Candidate], dict[str, int]]:
+    if pattern not in DIET_TAG:
+        raise ValueError(f"unsupported dietary_pattern: {pattern}")
+    slot_groups = {g for s in template["slots"].values() for g, (_, hi) in s["groups"].items() if hi > 0}
+    skip = set(template.get("excluded_groups", []))
+    names = sorted(needed)
+    marks = ",".join("?" for _ in names)
+    nut_rows: dict[int, dict[str, tuple[float | None, str]]] = {}
+    for fid, nname, val, status in conn.execute(
+        f"SELECT fn.food_id, n.canonical_name, fn.value_canonical, fn.value_status FROM food_nutrients fn "
+        f"JOIN nutrients n ON n.id = fn.nutrient_id WHERE n.canonical_name IN ({marks})", names):
+        nut_rows.setdefault(fid, {})[nname] = (val, status)
+    tags: dict[int, set[str]] = {}
+    for fid, code in conn.execute("SELECT t.food_id, d.code FROM diet_type_tags t JOIN diet_types d ON d.id = t.diet_type_id WHERE t.is_compatible = 1"):
+        tags.setdefault(fid, set()).add(code)
+    allergy_ids = {code: aid for aid, code in conn.execute("SELECT id, code FROM allergens")}
+    unknown_allergens = [a for a in allergens if a not in allergy_ids]
+    if unknown_allergens:
+        raise ValueError(f"unknown allergen codes: {', '.join(unknown_allergens)}")
+    presence: dict[tuple[int, str], str] = {}
+    if allergens:
+        marks_a = ",".join("?" for _ in allergens)
+        for fid, code, pres in conn.execute(
+            f"SELECT fa.food_id, a.code, fa.presence FROM food_allergens fa JOIN allergens a ON a.id = fa.allergen_id WHERE a.code IN ({marks_a})", allergens):
+            presence[(fid, code)] = pres
+    excluded: dict[str, int] = {}
+    def drop(reason: str) -> None: excluded[reason] = excluded.get(reason, 0) + 1
+    out: list[Candidate] = []
+    for fid, code, name, group in conn.execute(
+        "SELECT f.id, f.source_code, f.english_name, g.code FROM foods f JOIN food_groups g ON g.id = f.food_group_id ORDER BY f.id"):
+        if group in skip or group not in slot_groups: drop("GROUP_NOT_USED"); continue
+        if allowed_codes is not None and code not in allowed_codes: drop("NOT_IN_COMMON_FOODS"); continue
+        if pattern == "vegan" and group == "L": drop("DIET_PATTERN"); continue
+        wanted = DIET_TAG[pattern]
+        if wanted is not None and wanted not in tags.get(fid, set()): drop("DIET_PATTERN"); continue
+        if any(presence.get((fid, a), "UNKNOWN") != "ABSENT" for a in allergens): drop("ALLERGEN_NOT_ABSENT"); continue
+        row = nut_rows.get(fid, {})
+        energy = row.get("energy_kcal", (None, "NOT_ANALYSED"))
+        if energy[0] is None: drop("NO_ENERGY"); continue
+        values: dict[str, float] = {}
+        approx = False
+        bad = None
+        for n in needed:
+            val, status = row.get(n, (None, "NOT_ANALYSED"))
+            if val is None:
+                if status == "NOT_DETECTED": values[n] = 0.0; approx = True
+                elif n in max_bounded: bad = n; break
+                else: values[n] = 0.0; approx = True
+            else: values[n] = float(val)
+        if bad: drop(f"UNKNOWN_{bad.upper()}"); continue
+        out.append(Candidate(fid, code, name, group, values, approx))
+    return out, excluded
+
+
+def solve(candidates: list[Candidate], bounds: dict[str, dict[str, dict[str, float | None]]], energy_kcal: float,
+          template: dict[str, Any], salt_min_g: float, salt_max_g: float, relax_hard: bool = False,
+          forbid: set[tuple[int, str]] | None = None) -> tuple[Any, dict[str, Any]]:
+    forbid = forbid or set()
+    tol = float(template.get("energy_tolerance", 0.10))
+    slots = list(template["slots"])
+    var: list[tuple[int, str]] = []  # (candidate index, slot)
+    for si, s in enumerate(slots):
+        groups = template["slots"][s]["groups"]
+        for ci, c in enumerate(candidates):
+            if c.group in groups and groups[c.group][1] > 0 and (c.food_id, s) not in forbid:
+                var.append((ci, s))
+    nx = len(var)
+    SALT, DP, DM, MX = nx, nx + 1, nx + 2, nx + 3
+    extra_cols: list[tuple[str, str, str, float]] = []   # (nutrient, kind, class, bound) slack columns
+    rows: list[tuple[dict[int, float], float, str]] = []  # (coeffs, rhs, tag)  meaning coeffs . x <= rhs
+    slack_info: list[tuple[int, float, str]] = []         # (column, weight, label)
+    n_cols = nx + 4
+    def add_slack(weight: float, label: str) -> int:
+        nonlocal n_cols
+        col = n_cols; n_cols += 1
+        slack_info.append((col, weight, label))
+        return col
+    def nutrient_row(name: str) -> dict[int, float]:
+        row = {i: candidates[ci].values[name] / 100.0 for i, (ci, _) in enumerate(var) if candidates[ci].values.get(name, 0.0) != 0.0}
+        if name == "sodium": row[SALT] = SALT_SODIUM_MG_PER_G
+        return row
+    for name in sorted(bounds):
+        for cls in ("hard", "soft"):
+            b = bounds[name][cls]
+            for kind in ("max", "min"):
+                v = b.get(kind)
+                if v is None: continue
+                row = nutrient_row(name)
+                if cls == "hard" and not relax_hard:
+                    rhs = v * (1 - MARGIN) if kind == "max" else v * (1 + MARGIN)
+                    rows.append((row, rhs, f"{name}:{cls}:{kind}") if kind == "max" else ({k: -x for k, x in row.items()}, -rhs, f"{name}:{cls}:{kind}"))
+                else:
+                    weight = (1000.0 if cls == "hard" else 100.0) / max(abs(v), 1e-9)
+                    col = add_slack(weight, f"{name}:{cls}:{kind}")
+                    if kind == "max": r = dict(row); r[col] = -1.0; rows.append((r, v, f"{name}:{cls}:{kind}"))
+                    else: r = {k: -x for k, x in row.items()}; r[col] = -1.0; rows.append((r, -v, f"{name}:{cls}:{kind}"))
+    energy_row = {i: candidates[ci].values["energy_kcal"] / 100.0 for i, (ci, _) in enumerate(var)}
+    rows.append((dict(energy_row), energy_kcal * (1 + tol), "energy:window:max"))
+    rows.append(({k: -x for k, x in energy_row.items()}, -energy_kcal * (1 - tol), "energy:window:min"))
+    for s in slots:
+        spec = template["slots"][s]
+        sel = {i: candidates[ci].values["energy_kcal"] / 100.0 for i, (ci, sl) in enumerate(var) if sl == s}
+        if not sel: continue
+        lo, hi = spec["energy_share"]
+        rows.append((dict(sel), hi * energy_kcal, f"slot:{s}:energy:max"))
+        rows.append(({k: -x for k, x in sel.items()}, -lo * energy_kcal, f"slot:{s}:energy:min"))
+        for g, (glo, ghi) in spec["groups"].items():
+            members = {i: 1.0 for i, (ci, sl) in enumerate(var) if sl == s and candidates[ci].group == g}
+            if not members: continue
+            rows.append((dict(members), ghi, f"slot:{s}:group:{g}:max"))
+            if glo > 0: rows.append(({k: -1.0 for k in members}, -glo, f"slot:{s}:group:{g}:min"))
+    by_food: dict[int, list[int]] = {}
+    for i, (ci, _) in enumerate(var): by_food.setdefault(ci, []).append(i)
+    caps = template.get("per_food_max_g_by_group", {}); default_cap = float(template.get("per_food_max_g_default", 200))
+    for ci, idx in by_food.items():
+        cap = float(caps.get(candidates[ci].group, default_cap))
+        rows.append(({i: 1.0 for i in idx}, cap, f"food:{candidates[ci].food_id}:cap"))
+    A = lil_matrix((len(rows), n_cols)); b = np.zeros(len(rows))
+    for ri, (coeffs, rhs, _) in enumerate(rows):
+        for ci_, v in coeffs.items(): A[ri, ci_] = v
+        b[ri] = rhs
+    Aeq = lil_matrix((1, n_cols)); beq = np.array([energy_kcal])
+    for i, v in energy_row.items(): Aeq[0, i] = v
+    Aeq[0, DP] = -1.0; Aeq[0, DM] = 1.0
+    c = np.zeros(n_cols)
+    c[:nx] = 0.001 / 1000.0
+    c[DP] = c[DM] = 10.0 / energy_kcal
+    c[MX] = 0.0
+    c[SALT] = -0.2 / max(salt_max_g, 1e-9)
+    for col, weight, _ in slack_info: c[col] = weight
+    lower = np.zeros(n_cols); upper = np.full(n_cols, np.inf)
+    upper[:nx] = [float(caps.get(candidates[ci].group, default_cap)) for ci, _ in var]
+    lower[SALT], upper[SALT] = salt_min_g, salt_max_g
+    res = linprog(c, A_ub=A.tocsr(), b_ub=b, A_eq=Aeq.tocsr(), b_eq=beq, bounds=list(zip(lower, upper)), method="highs")
+    info = {"var": var, "slots": slots, "n_rows": len(rows), "slack": slack_info, "SALT": SALT}
+    return res, info
+
+
+def optimize(conn: sqlite3.Connection, resolved_nutrients: dict[str, Any], energy_kcal: float, template: dict[str, Any],
+             allergens: list[str], pattern: str, salt_min_g: float = 1.0, salt_max_g: float = 5.0,
+             allowed_codes: set[str] | None = None) -> PlanResult:
+    bounds = bounds_of(resolved_nutrients)
+    needed = set(REPORT_NUTRIENTS) | set(bounds)
+    max_bounded = {n for n, b in bounds.items() if b["hard"].get("max") is not None or b["soft"].get("max") is not None}
+    candidates, excluded = load_candidates(conn, needed, max_bounded, template, allergens, pattern, allowed_codes)
+    diag: dict[str, Any] = {"candidates": len(candidates), "excluded_foods_by_reason": dict(sorted(excluded.items()))}
     if not candidates:
-        conn.close()
-        return {"status": "INFEASIBLE_PLAN", "foods": [], "slots": [], "nutrients": {},
-                "needs_info": [{"reason": "no eligible candidate foods"}]}
-    nutrients = sorted(resolved.nutrients)
-    n = len(candidates)
-    energy = resolved.energy_target_kcal
-    c = np.array([1.0 + i * 1e-8 for i in range(n)], dtype=float)
-    a_ub: list[list[float]] = []
-    b_ub: list[float] = []
-    labels: list[str] = []
-    soft_ub: list[list[float]] = []
-    soft_b: list[float] = []
-    soft_labels: list[str] = []
-    for nutrient in nutrients:
-        values = np.array([0.0 if f["values"].get(nutrient, (None,))[0] is None else
-                           (f["values"][nutrient][0] or 0.0) / 100.0 for f in candidates])
-        bound = resolved.nutrients[nutrient]
-        hard_bound = bound if "hard" in bound else None
-        active = hard_bound or (None if "soft" in bound else bound)
-        for target, matrix, rhs, name in ((active, a_ub, b_ub, labels),):
-            if target is None: continue
-            maximum = target.get("max")
-            if nutrient == "sodium" and maximum is not None:
-                maximum -= SALT_SODIUM_MG_PER_G * added_salt_g_per_day
-            if maximum is not None:
-                matrix.append(values.tolist()); rhs.append(float(maximum)); name.append(f"{nutrient}:max")
-            minimum = target.get("min")
-            if minimum is not None:
-                matrix.append((-values).tolist()); rhs.append(-float(minimum)); name.append(f"{nutrient}:min")
-        soft = bound.get("soft")
-        if soft:
-            for maximum, minimum in ((soft.get("max"), soft.get("min")),):
-                if maximum is not None:
-                    soft_ub.append(values.tolist()); soft_b.append(float(maximum)); soft_labels.append(f"{nutrient}:soft:max")
-                if minimum is not None:
-                    soft_ub.append((-values).tolist()); soft_b.append(-float(minimum)); soft_labels.append(f"{nutrient}:soft:min")
-    if energy is not None:
-        values = np.array([(f["values"].get("energy_kcal", (0.0,))[0] or 0.0) / 100.0 for f in candidates])
-        a_ub.append(values.tolist()); b_ub.append(float(energy * 1.2)); labels.append("energy:max")
-        a_ub.append((-values).tolist()); b_ub.append(-float(energy * 0.8)); labels.append("energy:min")
-    bounds = [(0.0, float(max_food_grams_per_day))] * n
-    result = linprog(c, A_ub=np.array(a_ub + soft_ub) if a_ub or soft_ub else None,
-                     b_ub=np.array(b_ub + soft_b) if b_ub or soft_b else None,
-                     bounds=bounds, method="highs", options={"presolve": True})
-    relaxed: list[dict[str, Any]] = []
-    if not result.success:
-        # Add one non-negative slack variable per SOFT row. The large penalty
-        # preserves the hard feasible region while preferring small violations.
-        if soft_ub:
-            total = n + len(soft_ub)
-            objective = np.r_[c, np.full(len(soft_ub), 100000.0)]
-            matrix = []
-            rhs = list(b_ub)
-            for row, value in zip(a_ub, b_ub):
-                matrix.append(row + [0.0] * len(soft_ub))
-            for i, (row, value) in enumerate(zip(soft_ub, soft_b)):
-                matrix.append(row + [1.0 if j == i else 0.0 for j in range(len(soft_ub))])
-                rhs.append(value)
-            result = linprog(objective, A_ub=np.array(matrix), b_ub=np.array(rhs),
-                             bounds=bounds + [(0.0, None)] * len(soft_ub), method="highs",
-                             options={"presolve": True})
-            if result.success:
-                relaxed = [{"constraint": soft_labels[i], "amount": float(result.x[n + i])}
-                           for i in range(len(soft_ub)) if result.x[n + i] > 1e-7]
-        if not result.success:
-            conn.close()
-            return {"status": "INFEASIBLE_PLAN", "foods": [], "slots": [], "nutrients": {},
-                    "infeasible_constraints": labels + soft_labels, "needs_info": []}
-    grams = [(candidates[i], float(result.x[i])) for i in range(n) if result.x[i] > 1e-7]
-    slots = _templates(Path(template_path) if template_path else Path("data/templates/meal_templates.json"))
-    plan_foods = [{"food_id": f["id"], "source_code": f["source_code"], "name": f["name"],
-                   "grams": round(g, 6), "approximate": f["approximate"], "group_code": f["group_code"],
-                   "basis": "raw_edible_portion"} for f, g in grams]
-    conn.close()
-    slot_output = [{"slot": s["slot"], "foods": [], "grams": 0.0, "max_grams": float(s.get("max_grams", 10000))} for s in slots]
-    for food in sorted(plan_foods, key=lambda item: (-item["grams"], item["food_id"])):
-        preferred = [i for i, slot in enumerate(slots) if food["group_code"] in {str(x).upper() for x in slot.get("preferred_groups", [])}]
-        choices = preferred or list(range(len(slots)))
-        choices = sorted(choices, key=lambda i: (slot_output[i]["grams"] + food["grams"] > slot_output[i]["max_grams"],
-                                                  slot_output[i]["grams"], i))
-        chosen = choices[0]
-        slot_output[chosen]["foods"].append(food)
-        slot_output[chosen]["grams"] += food["grams"]
-        food["slot"] = slot_output[chosen]["slot"]
-    for slot in slot_output:
-        slot["grams"] = round(slot["grams"], 6)
-    return {"status": "OK", "foods": plan_foods,
-            "slots": slot_output,
-            "nutrients": {}, "advisories": list(resolved.advisories),
-            "added_salt_g_per_day": added_salt_g_per_day,
-            "sodium_total_includes_added_salt_g": added_salt_g_per_day,
-            "salt_assumption": "The plan assumes added salt is limited to this amount.",
-            "price_objective": "reserved; no price term is used",
-            "template_status": "DRAFT_HEURISTIC",
-            "relaxed_soft_bounds": relaxed,
-            "advisories": list(resolved.advisories) + ([{"reason": "foods skipped because energy is missing", "count": skipped_energy}] if skipped_energy else [])}
+        return PlanResult("NO_CANDIDATES", diagnostics=diag)
+    forbid: set[tuple[int, str]] = set()
+    res, info = solve(candidates, bounds, energy_kcal, template, salt_min_g, salt_max_g, False, forbid)
+    if res.status != 0:
+        relax, rinfo = solve(candidates, bounds, energy_kcal, template, salt_min_g, salt_max_g, True, forbid)
+        gives = []
+        if relax.status == 0:
+            for col, weight, label in rinfo["slack"]:
+                if relax.x[col] > 1e-6 and ":hard:" in label:
+                    gives.append({"constraint": label, "violation": round(float(relax.x[col]), 3)})
+        diag["would_need_to_relax"] = sorted(gives, key=lambda g: g["constraint"])
+        diag["solver_message"] = res.message
+        return PlanResult("INFEASIBLE_PLAN", diagnostics=diag)
+    max_per_group = int(template.get("max_foods_per_slot_group", 2))
+    for _ in range(6):  # prune tiny portions and keep at most K foods per slot/group, then re-solve
+        var = info["var"]
+        drop_now: set[tuple[int, str]] = set()
+        by_sg: dict[tuple[str, str], list[tuple[float, int, int]]] = {}
+        for i, (ci, s_) in enumerate(var):
+            if res.x[i] <= 1e-6: continue
+            if res.x[i] < MIN_PORTION_G: drop_now.add((candidates[ci].food_id, s_))
+            else: by_sg.setdefault((s_, candidates[ci].group), []).append((float(res.x[i]), -candidates[ci].food_id, ci))
+        for (s_, g_), lst in by_sg.items():
+            for _, _, ci in sorted(lst, reverse=True)[max_per_group:]: drop_now.add((candidates[ci].food_id, s_))
+        if not drop_now: break
+        res2, info2 = solve(candidates, bounds, energy_kcal, template, salt_min_g, salt_max_g, False, forbid | drop_now)
+        if res2.status != 0: break
+        forbid |= drop_now; res, info = res2, info2
+    var = info["var"]
+    soft_relaxed = [{"constraint": label, "violation": round(float(res.x[col]), 3)} for col, _, label in info["slack"] if res.x[col] > 1e-6]
+    diag["soft_bounds_relaxed"] = sorted(soft_relaxed, key=lambda g: g["constraint"])
+    items = []
+    for i, (ci, s) in enumerate(var):
+        grams = int(round(float(res.x[i])))
+        if grams <= 0: continue
+        c = candidates[ci]
+        items.append({"slot": s, "food_id": c.food_id, "source_code": c.code, "name": c.name, "group": c.group,
+                      "grams": grams, "approximate": c.approximate})
+    order = {s: k for k, s in enumerate(info["slots"])}
+    items.sort(key=lambda x: (order[x["slot"]], x["group"], x["food_id"]))
+    salt = math.floor(float(res.x[info["SALT"]]) * 10 + 1e-9) / 10.0
+    diag["objective"] = round(float(res.fun), 6)
+    return PlanResult("OK", items, max(salt, 0.0), diag)
