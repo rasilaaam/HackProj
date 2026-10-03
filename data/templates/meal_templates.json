@@ -1,0 +1,10 @@
+{
+  "status": "DRAFT_HEURISTIC",
+  "basis": "raw_edible_portion",
+  "slots": [
+    {"slot": "breakfast", "min_grams": 0, "max_grams": 10000, "allowed_food_groups": []},
+    {"slot": "lunch", "min_grams": 0, "max_grams": 10000, "allowed_food_groups": []},
+    {"slot": "dinner", "min_grams": 0, "max_grams": 10000, "allowed_food_groups": []},
+    {"slot": "snack", "min_grams": 0, "max_grams": 10000, "allowed_food_groups": []}
+  ]
+}

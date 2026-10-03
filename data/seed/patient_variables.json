@@ -20,5 +20,6 @@
   {"variable_name":"uric_acid_mg_dl","display_name":"Uric acid","data_type":"REAL","unit":"mg/dL","source":"LAB_REPORT","min_value":0,"max_value":30,"range_note":"plausibility bound, not a clinical threshold"},
   {"variable_name":"ldl_mg_dl","display_name":"LDL","data_type":"REAL","unit":"mg/dL","source":"LAB_REPORT","min_value":0,"max_value":1000,"range_note":"plausibility bound, not a clinical threshold"},
   {"variable_name":"systolic_bp_mmHg","display_name":"Systolic blood pressure","data_type":"REAL","unit":"mmHg","source":"LAB_REPORT","min_value":0,"max_value":400,"range_note":"plausibility bound, not a clinical threshold"},
-  {"variable_name":"diastolic_bp_mmHg","display_name":"Diastolic blood pressure","data_type":"REAL","unit":"mmHg","source":"LAB_REPORT","min_value":0,"max_value":300,"range_note":"plausibility bound, not a clinical threshold"}
+  {"variable_name":"diastolic_bp_mmHg","display_name":"Diastolic blood pressure","data_type":"REAL","unit":"mmHg","source":"LAB_REPORT","min_value":0,"max_value":300,"range_note":"plausibility bound, not a clinical threshold"},
+  {"variable_name":"energy_target_kcal","display_name":"Patient energy target","data_type":"REAL","unit":"kcal/day","source":"USER_ENTERED","min_value":1,"max_value":10000,"range_note":"plausibility bound, not a clinical threshold"}
 ]
