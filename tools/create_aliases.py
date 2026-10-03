@@ -5,38 +5,10 @@ IFCT CSV contains names like: "Rice, raw, milled" or with regional names:
 "Rice, raw, milled; Hindi: Chawal; Tamil: Arisi; Telugu: Biyyam"
 """
 import csv
-import re
 import sqlite3
 from pathlib import Path
 import sys
-
-def extract_regional_names(name_field: str) -> dict:
-    """Extract regional names from name field.
-    
-    Format: "English name; Hindi: Hindi name; Tamil: Tamil name; Telugu: Telugu name"
-    Returns: {'English': 'Rice, raw, milled', 'Hindi': 'Chawal', ...}
-    """
-    result = {}
-    
-    # Split by semicolon
-    parts = [p.strip() for p in name_field.split(';')]
-    
-    if not parts:
-        return result
-    
-    # First part is always English name
-    first_part = parts[0].strip()
-    result['English'] = first_part
-    
-    # Process regional names
-    for part in parts[1:]:
-        # Match "Language: Name"
-        match = re.match(r'^(\w+):\s*(.+)$', part)
-        if match:
-            language, regional_name = match.groups()
-            result[language] = regional_name.strip()
-    
-    return result
+from dietdb.aliases import extract_regional_names
 
 def create_alias_loader(db_path: str):
     """Create aliases from IFCT CSV in database."""

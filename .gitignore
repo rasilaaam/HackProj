@@ -158,6 +158,9 @@ build/
 
 # Local development
 .env.local
+
+# Locally extracted source text; never commit the IFCT book contents
+local/
 *.local
 
 # Temporary files

@@ -260,7 +260,7 @@ enerc:
   book_table: 1
   canonical_unit: kcal
   csv_to_printed: 1.0
-  printed_to_canonical: 0.2388
+  printed_to_canonical: 0.23923444976076555
   printed_unit: kJ
   status: VERIFIED
 epicatec:

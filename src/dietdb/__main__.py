@@ -1,60 +1,107 @@
-"""
-DietDB - Main CLI and build orchestration
-"""
-
-import sys
+#!/usr/bin/env python3
+"""DietDB CLI - python -m dietdb build"""
 import argparse
+import hashlib
+import sqlite3
+import sys
 from pathlib import Path
-import logging
-from dietdb.db import DatabaseManager
-from dietdb.ingest.ifct_simple import IfctLoader
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+from datetime import datetime
 
 
-def build_database(db_path: str = "data/diet.db", output_hash: bool = False) -> None:
-    """Build database from clean checkout"""
-    db_path = Path(db_path)
-    db_path.parent.mkdir(parents=True, exist_ok=True)
+def get_db_hash(db_path: str) -> str:
+    """Deterministic hash excluding rowid, FTS tables, timestamps."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
 
-    logger.info(f"Initializing database at {db_path}")
-    db_manager = DatabaseManager(db_path)
+    cur.execute("""
+        SELECT name FROM sqlite_master
+        WHERE type='table' AND name NOT LIKE 'food_aliases_fts%'
+        AND name != 'build_metadata'
+        AND name != 'schema_version'
+        ORDER BY name
+    """)
+    tables = [r[0] for r in cur.fetchall()]
 
-    # Initialize schema
-    db_manager.init_db()
-    logger.info("Schema initialized")
+    h = hashlib.sha256()
+    for tbl in tables:
+        cur.execute(f"PRAGMA table_info({tbl})")
+        cols = [r['name'] for r in cur.fetchall()
+                if r['name'] not in ('rowid','created_at','updated_at')]
+        if not cols:
+            continue
+        col_list = ', '.join(f'"{c}"' for c in cols)
+        cur.execute(f"SELECT {col_list} FROM {tbl} ORDER BY {col_list}")
+        h.update((tbl + '\0').encode())
+        for row in cur:
+            for c in cols:
+                v = row[c]
+                h.update(('<NULL>' if v is None else str(v) + '\0').encode())
+    conn.close()
+    return h.hexdigest()
 
-    # Load IFCT 2017 data
-    ifct_loader = IfctLoader(db_path)
-    ifct_loader.load()
-    logger.info("IFCT 2017 data loaded")
+
+def build_database(db_path: str, csv_path: str = None, output_hash: bool = False):
+    """Build database from IFCT 2017 CSV with YAML mapping."""
+    from dietdb.ingest.ifct_loader import IFCTLoader
+
+    repo = Path(__file__).parent.parent.parent
+    csv_path = csv_path or str(repo / 'data/raw/ifct2017/2.0.0/index.csv')
+    mapping_path = str(repo / 'data/mappings/ifct_columns.yaml')
+    sha256 = '22bb9d5072d3907af389cb77deab37a164ba5f84bf2a3eaf1a3fb274f6567ba9'
+
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+
+    output_path = Path(db_path)
+    if output_path.exists() and output_path.stat().st_size:
+        raise FileExistsError(
+            f"Refusing to rebuild existing database {db_path}; remove it first"
+        )
+
+    # Apply migrations
+    conn = sqlite3.connect(str(db_path))
+    for m in sorted((repo / 'migrations').glob('*.sql')):
+        conn.executescript(open(m).read())
+    conn.close()
+
+    # Load IFCT data
+    IFCTLoader(csv_path, mapping_path, str(db_path), sha256).load()
+
+    # Record build metadata
+    conn = sqlite3.connect(str(db_path))
+    db_hash = get_db_hash(str(db_path))
+    conn.execute("CREATE TABLE IF NOT EXISTS build_metadata (key TEXT PRIMARY KEY, value TEXT)")
+    conn.execute("INSERT OR REPLACE INTO build_metadata VALUES ('build_hash',?)", (db_hash,))
+    conn.execute("INSERT OR REPLACE INTO build_metadata VALUES ('build_time',?)",
+                 (datetime.utcnow().isoformat(),))
+    conn.commit()
+    conn.close()
 
     if output_hash:
-        hash_val = db_manager.get_db_hash()
-        logger.info(f"Database hash: {hash_val}")
-        print(hash_val)
+        return db_hash
+    print(f"Built: {db_path}\nHash: {db_hash}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="DietDB - Diet Planning Engine")
-    subparsers = parser.add_subparsers(dest="command", help="Command to run")
+    p = argparse.ArgumentParser(description='DietDB CLI')
+    sp = p.add_subparsers(dest='cmd', required=True)
 
-    # Build command
-    build_parser = subparsers.add_parser("build", help="Build database from scratch")
-    build_parser.add_argument("--db", default="data/diet.db", help="Database path")
-    build_parser.add_argument("--output-hash", action="store_true", help="Output database hash")
+    bp = sp.add_parser('build', help='Build database from IFCT 2017')
+    bp.add_argument('--db', required=True, help='Output database path')
+    bp.add_argument('--csv', help='Path to IFCT CSV (optional)')
+    bp.add_argument('--output-hash', action='store_true', help='Output only hash')
 
-    args = parser.parse_args()
+    hp = sp.add_parser('hash', help='Compute database hash')
+    hp.add_argument('--db', required=True)
 
-    if args.command == "build":
-        build_database(args.db, args.output_hash)
-    else:
-        parser.print_help()
+    a = p.parse_args()
+    if a.cmd == 'build':
+        r = build_database(a.db, getattr(a, 'csv', None), a.output_hash)
+        if a.output_hash:
+            print(r)
+    elif a.cmd == 'hash':
+        print(get_db_hash(a.db))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

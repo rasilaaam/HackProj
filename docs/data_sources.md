@@ -1,38 +1,16 @@
-# Data Sources Documentation
+# Data Sources
 
-## Primary: IFCT 2017
+## IFCT 2017
 
-**Source**: Indian Food Composition Tables 2017, National Institute of Nutrition, Hyderabad
+Longvah, T., Ananthan, R., Bhaskarachary, K. and Venkaiah, K. (2017), *Indian
+Food Composition Tables 2017*, National Institute of Nutrition, Indian Council
+of Medical Research, Hyderabad.
 
-**Machine-Readable**: `@ifct2017/compositions` npm package (nodef/ifct2017)
+IFCT 2017 (c) National Institute of Nutrition (ICMR), Hyderabad. Electronic
+storage for product use requires NIN's written permission (not yet granted).
+Data transcription via npm `@ifct2017/compositions` 2.0.0 (MIT). The package
+CSV is verified by SHA-256 before loading.
 
-**Verification Status**: UNVERIFIED_AGAINST_OFFICIAL_SOURCE (IFCT PDF not provided)
-
-**Raw Data Location**: `data/raw/ifct2017/<version>/`
-
-## Parsing Rules
-
-| Source Format | Parsed Value | Status |
-|--------------|--------------|--------|
-| "12.5" | 12.5 | MEASURED |
-| "12.5 ± 1.2" | 12.5, sd=1.2 | MEASURED |
-| "Tr" | 0.001 | TRACE |
-| "BD" | null | NOT_DETECTED |
-| "-" | null | NOT_ANALYSED |
-
-## Curated Data (Empty, To Be Populated)
-- Allergen information
-- Diet type tags (vegetarian, vegan, Jain)
-- Glycemic Index values
-- Household measures (katori, roti, glass, tsp)
-- Regional prices (INR/kg)
-- Preparation effects (nutrient retention)
-
-## Baseline Reference Intakes
-ICMR-NIN Recommended Dietary Allowances as BASELINE_DEFAULT rules.
-
-## Open Questions
-1. IFCT data license from NIN
-2. Official verification against book PDF
-3. Allergen assessment methodology
-4. Regional price data sources
+The source values are per 100 g edible portion. The database preserves native
+values and records canonical-unit conversions and value status. Blank or zero
+source values are not treated as measured zeroes.

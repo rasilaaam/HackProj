@@ -1,22 +1,66 @@
 #!/usr/bin/env python3
 """
 IFCT 2017 loader: SHA256 verification, BDL rules, nutrient hierarchy, idempotent.
+
+Key conversions:
+- Energy: kJ → kcal via / 4.18
+- SD values: converted by same factor as main value
+- Group T (oils): NOT_ANALYSED per IFCT Table 12
+
+License: IFCT 2017 (c) NIN/ICMR; product use requires NIN's written permission.
 """
 import csv
 import hashlib
+import re
 import sqlite3
 import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional
+
+from dietdb.aliases import extract_regional_names
+
+
+# Nutrient parent hierarchy (child: parent ifct_column_code)
+NUTRIENT_PARENTS = {
+    # Fatty acids under total fat
+    'fasat': 'fatce', 'fauns': 'fatce', 'fapu': 'fatce', 'fams': 'fatce',
+    'f18d2cn6': 'fapu', 'f18d3n3': 'fapu', 'f20d4n6': 'fapu', 'f20d5n3': 'fapu', 'f22d6n3': 'fapu',
+    # Amino acids under protein
+    'his': 'protcnt', 'ile': 'protcnt', 'leu': 'protcnt', 'lys': 'protcnt',
+    'met': 'protcnt', 'cys': 'protcnt', 'phe': 'protcnt', 'thr': 'protcnt',
+    'trp': 'protcnt', 'val': 'protcnt', 'ala': 'protcnt', 'arg': 'protcnt',
+    'asp': 'protcnt', 'glu': 'protcnt', 'gly': 'protcnt', 'pro': 'protcnt', 'ser': 'protcnt', 'tyr': 'protcnt',
+    # Vitamins
+    'vita': 'vit', 'vitd': 'vit', 'vite': 'vit', 'vitk': 'vit', 'vitc': 'vit',
+    'thia': 'vit', 'ribf': 'vit', 'nia': 'vit', 'pantac': 'vit', 'vitb6c': 'vit', 'biot': 'vit', 'folsum': 'vit',
+    # Minerals
+    'ca': 'ash', 'fe': 'ash', 'mg': 'ash', 'p': 'ash', 'k': 'ash', 'na': 'ash', 'zn': 'ash',
+    'cu': 'ash', 'mn': 'ash', 'se': 'ash',
+}
+
+# Canonical names for nutrients
+CANONICAL_NAMES = {
+    'enerc': 'energy_kcal', 'water': 'water', 'ash': 'ash',
+    'protcnt': 'protein', 'fatce': 'fat_total', 'choavldf': 'carbohydrate',
+    'fibtg': 'fiber_total', 'f16d0': 'palmitic_acid', 'f18d0': 'stearic_acid',
+    'f18d1cn9': 'oleic_acid', 'f18d2cn6': 'linoleic_acid', 'f18d3n3': 'alpha_linolenic_acid',
+    'f20d4n6': 'arachidonic_acid', 'f20d5n3': 'epa', 'f22d6n3': 'dha',
+    'ca': 'calcium', 'fe': 'iron', 'mg': 'magnesium', 'p': 'phosphorus',
+    'k': 'potassium', 'na': 'sodium', 'zn': 'zinc', 'cu': 'copper',
+    'mn': 'manganese', 'se': 'selenium', 'vitc': 'vitamin_c',
+    'thia': 'thiamin', 'ribf': 'riboflavin', 'nia': 'niacin',
+    'pantac': 'pantothenic_acid', 'vitb6c': 'vitamin_b6', 'folsum': 'folate',
+    'vitd': 'vitamin_d', 'vite': 'vitamin_e', 'vitk': 'vitamin_k',
+    'his': 'histidine', 'ile': 'isoleucine', 'leu': 'leucine', 'lys': 'lysine',
+    'met': 'methionine', 'cys': 'cysteine', 'phe': 'phenylalanine', 'thr': 'threonine',
+    'trp': 'tryptophan', 'val': 'valine', 'ala': 'alanine', 'arg': 'arginine',
+    'asp': 'aspartic_acid', 'glu': 'glutamic_acid', 'gly': 'glycine',
+    'pro': 'proline', 'ser': 'serine', 'tyr': 'tyrosine',
+}
 
 
 class IFCTLoader:
     """Load IFCT 2017 CSV into dietdb schema."""
-    
-    # Columns that should be NOT_ANALYSED for Group T (oils)
-    GROUP_T_NOT_ANALYSED = {'enerc', 'water', 'ash', 'fibtg', 'fibins', 'fibsol', 
-                             'choavldf', 'protcnt', 'cho', 'starch', 'frus', 'glus', 
-                             'sucs', 'mals', 'lactose'}
     
     def __init__(self, csv_path: str, mapping_path: str, db_path: str, expected_sha256: str):
         self.csv_path = Path(csv_path)
@@ -68,8 +112,11 @@ class IFCTLoader:
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             ('ifct2017', 'IFCT 2017', 'Indian Food Composition Tables 2017',
              '2.0.0', 2017, 'National Institute of Nutrition (NIN), ICMR',
-             'MIT (npm package)', 'https://github.com/ifct2017/compositions',
-             str(self.csv_path), self.expected_sha256, 'VERIFIED')
+             'IFCT 2017 (c) National Institute of Nutrition (ICMR), Hyderabad. '
+             'Electronic storage for product use requires NIN written permission; '
+             'data transcription via @ifct2017/compositions 2.0.0 (MIT).',
+             'https://github.com/ifct2017/compositions', str(self.csv_path),
+             self.expected_sha256, 'CHECKED_AGAINST_BOOK_SAMPLE')
         )
         self.conn.commit()
         return cur.lastrowid
@@ -117,11 +164,18 @@ class IFCTLoader:
         elif csv_col in ('his', 'ile', 'leu', 'lys', 'met', 'cys', 'phe', 'thr', 'trp', 'val', 'ala', 'arg', 'asp', 'glu', 'gly', 'pro', 'ser', 'tyr'):
             category = 'AMINO_ACID'
         
+        canonical_name = CANONICAL_NAMES.get(csv_col, f'ifct_{csv_col}')
+        native_unit = 'kJ' if csv_col == 'enerc' else 'g'
+        conversion_factor = mapping_info.get('printed_to_canonical', 1.0)
+        if isinstance(conversion_factor, str):
+            conversion_factor = None
         cur.execute(
             """INSERT INTO nutrients 
-               (canonical_name, display_name, category, canonical_unit, ifct_column_code)
-               VALUES (?, ?, ?, ?, ?)""",
-            (f'ifct_{csv_col}', csv_col.upper(), category, canonical_unit, csv_col)
+               (canonical_name, display_name, category, canonical_unit,
+                ifct_column_code, conversion_factor, native_unit)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (canonical_name, canonical_name.replace('_', ' ').title(), category,
+             canonical_unit, csv_col, conversion_factor, native_unit)
         )
         self.conn.commit()
         return cur.lastrowid
@@ -132,6 +186,9 @@ class IFCTLoader:
         self.connect()
         try:
             mapping = self.load_mapping()
+            group_t_analysed = {
+                column for column, info in mapping.items() if info.get('book_table') == 7
+            }
             source_id = self.get_or_create_source()
             nutrient_map = {}
             for csv_col, info in mapping.items():
@@ -155,21 +212,46 @@ class IFCTLoader:
                     food_row = cur.fetchone()
                     if not food_row:
                         cur.execute(
-                            "INSERT INTO foods (source_code, source_id, english_name, food_group_id, food_state) VALUES (?, ?, ?, ?, ?)",
-                            (code, source_id, row['name'], group_id, food_state)
+                            "INSERT INTO foods (source_code, source_id, english_name, scientific_name, food_group_id, food_state) VALUES (?, ?, ?, ?, ?, ?)",
+                            (code, source_id, row['name'], row.get('scie') or None, group_id, food_state)
                         )
                         self.conn.commit()
                         food_id = cur.lastrowid
                         food_count += 1
                     else:
                         food_id = food_row[0]
+
+                    # The package keeps language-coded aliases and diet tags in metadata columns.
+                    aliases = {'English': row['name']}
+                    aliases.update(extract_regional_names(row.get('lang', '')))
+                    for language, alias in aliases.items():
+                        if alias.strip():
+                            cur.execute(
+                                """INSERT OR IGNORE INTO food_aliases
+                                   (food_id, alias, language, is_preferred)
+                                   VALUES (?, ?, ?, ?)""",
+                                (food_id, alias.strip(), language, int(language == 'English')))
+                    for tag in row.get('tags', '').split():
+                        tag_code = tag.strip().upper()
+                        if not tag_code:
+                            continue
+                        cur.execute(
+                            "INSERT OR IGNORE INTO diet_types (code, name) VALUES (?, ?)",
+                            (tag_code, tag.strip().replace('_', ' ').title()))
+                        cur.execute("SELECT id FROM diet_types WHERE code = ?", (tag_code,))
+                        diet_type_id = cur.fetchone()[0]
+                        cur.execute(
+                            """INSERT OR IGNORE INTO diet_type_tags
+                               (food_id, diet_type_id, is_compatible, source_id)
+                               VALUES (?, ?, 1, ?)""",
+                            (food_id, diet_type_id, source_id))
                     
                     for csv_col, nutrient_id in nutrient_map.items():
                         csv_value = row.get(csv_col, '').strip()
                         
                         if not csv_value:
                             value_status, value_native, sd = 'NOT_DETECTED', None, None
-                        elif group_code == 'T' and csv_col in self.GROUP_T_NOT_ANALYSED:
+                        elif group_code == 'T' and csv_col not in group_t_analysed:
                             value_status, value_native, sd = 'NOT_ANALYSED', None, None
                         else:
                             try:
@@ -204,6 +286,10 @@ class IFCTLoader:
                                     value_canonical = value_printed
                                 else:
                                     value_canonical = value_printed * printed_to_canonical
+                                if sd is not None:
+                                    sd = sd * csv_to_printed * (
+                                        printed_to_canonical if isinstance(printed_to_canonical, (int, float)) else 1.0
+                                    )
                         else:
                             value_canonical = None
 
@@ -213,7 +299,8 @@ class IFCTLoader:
                                (food_id, nutrient_id, value_native, unit_native, value_canonical, 
                                 canonical_unit, sd, value_status, source_id, source_row)
                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                            (food_id, nutrient_id, value_native, 'g', value_canonical,
+                            (food_id, nutrient_id, value_native,
+                             'kJ' if csv_col == 'enerc' else 'g', value_canonical,
                              mapping[csv_col]['canonical_unit'], sd, value_status, source_id, None)
                         )
                         nutrient_count += 1

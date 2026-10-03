@@ -53,10 +53,10 @@ dietdb/
 │   ├── db.py            # Database manager & migrations
 │   ├── models/          # Pydantic data models (5 modules)
 │   ├── ingest/          # Data loaders
-│   │   └── ifct_simple.py    # IFCT 2017 loader
+│   │   └── ifct_loader.py     # IFCT 2017 loader
 │   ├── __main__.py      # CLI entry point
 │   └── repository.py    # Read-only repository API
-├── tests/               # pytest suite (13 tests, 100% passing)
+├── tests/               # pytest suite
 ├── docs/                # Documentation
 ├── data/
 │   ├── diet.db          # Built database (572 KB)
@@ -82,8 +82,8 @@ This system is designed to support nutrition planning while ensuring all nutrien
 ### Core Tables
 
 - **foods** - 542 Indian foods with source codes and food states
-- **nutrients** - 10 core nutrients (energy, protein, fat, carbs, minerals)
-- **food_nutrients** - 5,420 nutrient measurements with value status
+- **nutrients** - 166 mapped IFCT columns
+- **food_nutrients** - 89,972 nutrient measurements with value status
 - **sources** - Data source metadata (IFCT 2017)
 - **food_groups** - Food categorization (Cereals, Vegetables, Fruits, Legumes)
 
@@ -101,8 +101,8 @@ Each nutrient value has a status:
 ### IFCT 2017
 - **Publisher**: National Institute of Nutrition (NIN), Hyderabad
 - **Coverage**: 542 foods commonly consumed in India
-- **Nutrients**: Composition data for 50+ nutrients (10 mapped to core set)
-- **Format**: CSV from [nodef/ifct2017](https://github.com/nodef/ifct2017)
+- **Nutrients**: Composition data for 166 verified IFCT columns
+- **Format**: CSV from `@ifct2017/compositions` 2.0.0 (MIT)
 - **Citation**: Longvah T, et al. (2017). Indian Food Composition Tables 2017.
 
 See `docs/data_sources.md` for full attribution.
@@ -161,10 +161,9 @@ pytest tests/test_schema.py -v
 | Metric | Value |
 |--------|-------|
 | Foods Loaded | 542 |
-| Nutrients | 10 |
-| Food-Nutrient Pairs | 5,420 |
-| Database Size | 572 KB |
-| Tests Passing | 13/13 ✓ |
+| Nutrients | 166 |
+| Food-Nutrient Pairs | 89,972 |
+| Aliases | 5,405 |
 | Schema Migrations | 3 |
 | Build Hash | 846b3063... |
 
@@ -181,7 +180,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-Data from IFCT 2017 is in the public domain. See LICENSE for full attribution.
+IFCT 2017 (c) National Institute of Nutrition (ICMR), Hyderabad. Electronic storage
+for product use requires NIN's written permission (not yet granted).
 
 ## Roadmap
 

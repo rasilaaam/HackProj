@@ -3,9 +3,9 @@
 .PHONY: help test load check clean setup
 
 # Configuration
-PYTHON = python3
+PYTHON = python
 PIP = pip3
-DB_PATH = data/dietdb.db
+DB_PATH = data/diet.db
 CSV_PATH = data/raw/ifct2017/2.0.0/index.csv
 MAPPING_PATH = data/mappings/ifct_columns.yaml
 SHA256 = 22bb9d5072d3907af389cb77deab37a164ba5f84bf2a3eaf1a3fb274f6567ba9
@@ -20,43 +20,21 @@ help:
 
 setup:
 	@echo "Installing Python dependencies..."
-	$(PIP) install pydantic pydantic-settings pyyaml pytest pytest-cov
+	$(PIP) install -r requirements.txt
 	@echo "✅ Dependencies installed"
 
 test:
 	@echo "Running tests..."
 	$(PYTHON) -m pytest tests/ -v
 
-load: $(DB_PATH)
-	@echo "Loading IFCT data..."
-	$(PYTHON) -c "
-import sys
-sys.path.insert(0, 'src')
-from dietdb.ingest.ifct_loader import IFCTLoader
-loader = IFCTLoader('$(CSV_PATH)', '$(MAPPING_PATH)', '$(DB_PATH)', '$(SHA256)')
-loader.load()
-"
-	@echo "✅ IFCT data loaded"
+load:
+	@echo "Building IFCT database..."
+	PYTHONPATH=src $(PYTHON) -m dietdb build --db $(DB_PATH)
 
 check: $(DB_PATH)
 	@echo "Running integrity checks..."
 	$(PYTHON) tools/check_integrity.py $(DB_PATH)
 	@echo "✅ Integrity checks completed"
-
-$(DB_PATH):
-	@echo "Creating database with schema..."
-	$(PYTHON) -c "
-import sqlite3
-conn = sqlite3.connect('$(DB_PATH)')
-with open('migrations/001_initial_schema.sql') as f:
-    conn.executescript(f.read())
-with open('migrations/002_curated_food_tables.sql') as f:
-    conn.executescript(f.read())
-with open('migrations/003_rules_and_conditions.sql') as f:
-    conn.executescript(f.read())
-conn.close()
-"
-	@echo "✅ Database created at $(DB_PATH)"
 
 clean:
 	@echo "Cleaning up..."

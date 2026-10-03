@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS patient_variables (
     unit TEXT,
     allowed_values TEXT,
     min_value REAL,
-    max_value TEXT,
+    max_value REAL,
     source TEXT NOT NULL,
     description TEXT
 );
@@ -85,15 +85,18 @@ CREATE TABLE IF NOT EXISTS rules (
     target_value REAL,
     tolerance REAL,
     unit TEXT,
-    basis TEXT NOT NULL,
+    basis TEXT NOT NULL CHECK(basis IN (
+        'PER_DAY', 'PER_MEAL', 'PER_WEEK', 'PER_KG_ACTUAL_WEIGHT',
+        'PER_KG_IDEAL_WEIGHT', 'PCT_OF_ENERGY', 'PER_1000_KCAL'
+    )),
     tier TEXT NOT NULL CHECK(tier IN ('SAFETY_CRITICAL', 'THERAPEUTIC', 'BASELINE_DEFAULT')),
     enforcement TEXT NOT NULL CHECK(enforcement IN ('HARD', 'SOFT', 'ADVISORY')),
-    applies_when TEXT NOT NULL,
+    applies_when TEXT NOT NULL CHECK(json_valid(applies_when)),
     rationale TEXT NOT NULL,
     source_id INTEGER,
     source_locator TEXT,
     evidence_grade TEXT,
-    status TEXT NOT NULL CHECK(status IN ('DRAFT', 'CLINICALLY_REVIEWED', 'APPROVED', 'DEPRECATED')),
+    status TEXT NOT NULL CHECK(status IN ('DRAFT', 'CLINICALLY_REVIEWED', 'APPROVED', 'DEPRECATED', 'TEST_FIXTURE')),
     reviewed_by TEXT,
     reviewed_at TEXT,
     version INTEGER DEFAULT 1,

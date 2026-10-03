@@ -109,6 +109,19 @@ CREATE VIRTUAL TABLE IF NOT EXISTS food_aliases_fts USING fts5(
     tokenize='unicode61'
 );
 
+CREATE TRIGGER IF NOT EXISTS food_aliases_ai AFTER INSERT ON food_aliases BEGIN
+    INSERT INTO food_aliases_fts(rowid, alias) VALUES (new.id, new.alias);
+END;
+CREATE TRIGGER IF NOT EXISTS food_aliases_ad AFTER DELETE ON food_aliases BEGIN
+    INSERT INTO food_aliases_fts(food_aliases_fts, rowid, alias)
+    VALUES ('delete', old.id, old.alias);
+END;
+CREATE TRIGGER IF NOT EXISTS food_aliases_au AFTER UPDATE OF alias ON food_aliases BEGIN
+    INSERT INTO food_aliases_fts(food_aliases_fts, rowid, alias)
+    VALUES ('delete', old.id, old.alias);
+    INSERT INTO food_aliases_fts(rowid, alias) VALUES (new.id, new.alias);
+END;
+
 -- ============================================================
 -- FOOD NUTRIENTS (core compositional data)
 -- ============================================================

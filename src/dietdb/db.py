@@ -23,7 +23,12 @@ class DatabaseManager:
         """Get database connection"""
         if readonly and not self.db_path.exists():
             raise FileNotFoundError(f"Database not found: {self.db_path}")
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        if readonly:
+            conn = sqlite3.connect(
+                f"file:{self.db_path.resolve()}?mode=ro", uri=True, check_same_thread=False
+            )
+        else:
+            conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON")
         return conn

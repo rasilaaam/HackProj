@@ -215,9 +215,9 @@ python3 -m dietdb build --db data/diet.db
 ## Features
 
 - 542 Indian foods from IFCT 2017
-- 10 core nutrients tracked
-- 5,420 nutrient measurements
+- 166 mapped nutrients tracked
+- 89,972 nutrient measurements
 - Data quality status tracking
-- 13/13 tests passing
+- Tests are run with `python -m pytest -q`
 - Deterministic builds
 - Full SQL database access
