@@ -6,9 +6,9 @@ from pathlib import Path
 import streamlit as st
 
 from dietdb.__main__ import build_database
-from dietdb.engine.constraints import Patient, resolve
 from dietdb.engine.db import connect_readonly
 from dietdb.engine.planner import make_plan
+from dietdb.llm import explain, extract_patient
 from dietdb.rules import load_conditions, load_rules
 
 
@@ -30,18 +30,20 @@ def intake(db: str) -> dict:
         rows = conn.execute("SELECT variable_name, display_name, data_type, allowed_values FROM patient_variables ORDER BY id").fetchall()
         allergens = [r[0] for r in conn.execute("SELECT code FROM allergens ORDER BY code")]
     values = {}
+    prefill = st.session_state.get("patient_prefill", {})
     for name, label, data_type, allowed in rows:
         if name.startswith("dx_") or data_type == "BOOLEAN":
-            values[name] = st.checkbox(label, value=False, key=name)
+            values[name] = st.checkbox(label, value=bool(prefill.get(name, False)), key=name)
         elif name == "allergy_list":
-            values[name] = st.multiselect(label, allergens, key=name)
+            values[name] = st.multiselect(label, allergens, default=prefill.get(name, []), key=name)
         elif data_type == "ENUM":
             options = json.loads(allowed or "[]")
-            values[name] = st.selectbox(label, options, key=name) if options else ""
+            default = prefill.get(name, options[0] if options else "")
+            values[name] = st.selectbox(label, options, index=options.index(default) if default in options else 0, key=name) if options else ""
         elif data_type == "REAL":
-            values[name] = st.number_input(label, min_value=0.0, value=0.0, key=name)
-        elif name not in {"medication_classes", "region", "dietary_pattern"}:
-            values[name] = st.text_input(label, key=name)
+            values[name] = st.number_input(label, min_value=0.0, value=float(prefill.get(name, 0.0)), key=name)
+        elif data_type == "STRING":
+            values[name] = st.text_input(label, value=str(prefill.get(name, "")), key=name)
     return {k: v for k, v in values.items() if v not in ("", [], 0.0)}
 
 
@@ -52,6 +54,18 @@ def main() -> None:
     page = st.sidebar.radio("Page", ["Patient intake", "Plan", "Explore foods"])
     if page == "Patient intake":
         st.title("Patient intake")
+        report = st.text_area("Paste a lab report for optional field extraction", key="lab_report")
+        if st.button("Extract fields from report"):
+            extracted = extract_patient(report, db)
+            st.session_state.patient_prefill = extracted["values"]
+            st.session_state.extraction_result = extracted
+            st.rerun()
+        if st.session_state.get("extraction_result"):
+            extraction = st.session_state.extraction_result
+            st.info("Extracted fields are suggestions only. Confirm every value before generating a plan.")
+            if extraction.get("missing_fields"): st.caption("Not found: " + ", ".join(extraction["missing_fields"]))
+            if extraction.get("unknown_fields"): st.caption("Ignored unknown fields: " + ", ".join(extraction["unknown_fields"]))
+            if extraction.get("rejected_fields"): st.error("Rejected fields: " + json.dumps(extraction["rejected_fields"]))
         values = intake(db)
         if st.button("Generate plan"):
             st.session_state.patient = values
@@ -65,6 +79,7 @@ def main() -> None:
             return
         try:
             result = make_plan(db, values, "draft-review")
+            st.session_state.plan_result = result
             st.warning(result.get("banner") or "RULES ARE UNREVIEWED DRAFTS: not clinical advice")
             st.subheader(f"Status: {result['status']}")
             if result.get("needs_info"):
@@ -79,6 +94,8 @@ def main() -> None:
             st.json({k: result.get(k) for k in ("assumptions", "advisories", "diagnostics")})
             for rule in result.get("rules_applied", []):
                 st.caption(f"{rule['slug']} ({rule['status']}): {rule['rationale']} [{rule['source_locator']}]")
+            if st.button("Explain this result"):
+                st.write(explain(result, language="English"))
             st.download_button("Download JSON", json.dumps(result, indent=2, default=list), "dietdb-plan.json", "application/json")
         except ValueError as exc:
             st.error(str(exc))

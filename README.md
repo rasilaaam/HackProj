@@ -17,6 +17,8 @@ python -m pytest -q
 
 The build loads 542 IFCT foods, 166 nutrients, and 89,972 nutrient rows from the pinned IFCT transcription. Fresh builds are content-hashed and deterministic.
 
+The repository currently collects 56 tests. The completed subsets in this environment passed 14 LLM/rules/schema tests, 15 planner-engine tests, 10 alias/parsing tests, and 16 IFCT-loader tests. Rules remain unreviewed draft content and every plan surface must be treated as not medical advice.
+
 ## Draft Rules And Plans
 
 Draft clinical rules remain `DRAFT`. Load them into a working copy, never the canonical database:
