@@ -185,6 +185,9 @@ class IFCTLoader:
         self.verify_checksum()
         self.connect()
         try:
+            existing_foods = self.conn.execute("SELECT COUNT(*) FROM foods").fetchone()[0]
+            if existing_foods == 542:
+                return
             mapping = self.load_mapping()
             group_t_analysed = {
                 column for column, info in mapping.items() if info.get('book_table') == 7

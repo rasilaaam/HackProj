@@ -22,8 +22,7 @@ MOCK_CSV_DATA = [
 
 def test_extract_regional_names():
     """Test regional name extraction from IFCT name field."""
-    # Import the function from create_aliases
-    from create_aliases import extract_regional_names
+    from dietdb.aliases import extract_regional_names
     
     # Test case 1: English only
     result = extract_regional_names("Rice, raw, milled")
@@ -56,7 +55,7 @@ def test_extract_regional_names():
 
 def test_alias_creation_with_mock_db():
     """Test alias creation in a mock database."""
-    from create_aliases import extract_regional_names
+    from dietdb.aliases import extract_regional_names
     
     # Create temp database
     with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
@@ -150,7 +149,7 @@ def test_alias_creation_with_mock_db():
 
 def test_script_detection():
     """Test script detection for different languages."""
-    from create_aliases import extract_regional_names
+    from dietdb.aliases import extract_regional_names
     
     # We'll need to test script detection more thoroughly
     # For now, verify the logic exists

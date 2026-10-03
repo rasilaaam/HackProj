@@ -3,6 +3,14 @@
 import pytest
 import tempfile
 from pathlib import Path
+import sqlite3
+
+from dietdb.ingest.ifct_loader import IFCTLoader
+
+REPO_ROOT = Path(__file__).parent.parent
+CSV_PATH = REPO_ROOT / "data/raw/ifct2017/2.0.0/index.csv"
+MAPPING_PATH = REPO_ROOT / "data/mappings/ifct_columns.yaml"
+EXPECTED_SHA256 = "22bb9d5072d3907af389cb77deab37a164ba5f84bf2a3eaf1a3fb274f6567ba9"
 
 # Try to import DatabaseManager, but don't fail if not available
 try:
@@ -10,6 +18,18 @@ try:
     HAS_DIETDB = True
 except ModuleNotFoundError:
     HAS_DIETDB = False
+
+
+@pytest.fixture(scope="session")
+def ifct_db(tmp_path_factory):
+    """Build the IFCT database once for the whole test session."""
+    db_file = tmp_path_factory.mktemp("ifct") / "diet.db"
+    conn = sqlite3.connect(db_file)
+    for migration in ("001_initial_schema.sql", "002_curated_food_tables.sql"):
+        conn.executescript((REPO_ROOT / "migrations" / migration).read_text())
+    conn.close()
+    IFCTLoader(str(CSV_PATH), str(MAPPING_PATH), str(db_file), EXPECTED_SHA256).load()
+    return db_file
 
 
 @pytest.fixture

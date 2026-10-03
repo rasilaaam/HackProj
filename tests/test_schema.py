@@ -155,16 +155,46 @@ class TestSchemaConstraints:
         conn.close()
 
 
-class TestLoaderValidation:
-    """Test loader validation logic"""
+class TestDatabaseSafety:
+    """Test connection safety and relationship constraints."""
 
-    def test_rule_expression_unknown_variable_rejected(self):
-        """Rule referencing unknown patient variable should be rejected"""
-        # This would be tested in the full loader implementation
-        # For now, we verify the patient_variables table exists
-        pass
+    def test_foreign_keys_are_enforced(self, temp_db):
+        conn = DatabaseManager(temp_db).get_connection()
+        assert conn.execute("PRAGMA foreign_keys").fetchone()[0] == 1
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                "INSERT INTO foods (source_code, source_id, english_name) VALUES ('BAD', 999, 'Bad')"
+            )
+        conn.close()
 
-    def test_production_loader_rejects_non_approved(self):
-        """Production loader must only load APPROVED rules"""
-        # Verify the rules table has status field
-        pass
+    def test_food_allergen_pair_is_unique(self, temp_db):
+        conn = sqlite3.connect(temp_db)
+        conn.execute("PRAGMA foreign_keys = ON")
+        source_id = conn.execute(
+            "INSERT INTO sources (slug, name) VALUES ('allergen-test', 'Test')"
+        ).lastrowid
+        food_id = conn.execute(
+            "INSERT INTO foods (source_code, source_id, english_name) VALUES ('F001', ?, 'Food')",
+            (source_id,),
+        ).lastrowid
+        allergen_id = conn.execute(
+            "INSERT INTO allergens (code, name) VALUES ('milk-test', 'Milk')"
+        ).lastrowid
+        values = (food_id, allergen_id, 'UNKNOWN', source_id)
+        conn.execute(
+            "INSERT INTO food_allergens (food_id, allergen_id, presence, source_id) VALUES (?, ?, ?, ?)",
+            values,
+        )
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute(
+                "INSERT INTO food_allergens (food_id, allergen_id, presence, source_id) VALUES (?, ?, ?, ?)",
+                values,
+            )
+        conn.close()
+
+    def test_read_only_connection_cannot_write(self, temp_db):
+        manager = DatabaseManager(temp_db)
+        conn = manager.get_connection(readonly=True)
+        with pytest.raises(sqlite3.OperationalError):
+            conn.execute("CREATE TABLE should_fail (id INTEGER)")
+        conn.close()
