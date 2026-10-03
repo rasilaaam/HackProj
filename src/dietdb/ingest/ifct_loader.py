@@ -164,7 +164,7 @@ class IFCTLoader:
         elif csv_col in ('his', 'ile', 'leu', 'lys', 'met', 'cys', 'phe', 'thr', 'trp', 'val', 'ala', 'arg', 'asp', 'glu', 'gly', 'pro', 'ser', 'tyr'):
             category = 'AMINO_ACID'
         
-        canonical_name = CANONICAL_NAMES.get(csv_col, f'ifct_{csv_col}')
+        canonical_name = CANONICAL_NAMES.get(csv_col, f'nutrient_{csv_col}')
         native_unit = 'kJ' if csv_col == 'enerc' else 'g'
         conversion_factor = mapping_info.get('printed_to_canonical', 1.0)
         if isinstance(conversion_factor, str):
@@ -229,6 +229,18 @@ class IFCTLoader:
                         food_count += 1
                     else:
                         food_id = food_row[0]
+
+                    flag_table = self.conn.execute(
+                        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='data_quality_flags'"
+                    ).fetchone()
+                    if flag_table:
+                        for prefix in ('E.', 'K.'):
+                            if prefix in row.get('lang', ''):
+                                cur.execute(
+                                    """INSERT INTO data_quality_flags
+                                       (table_name, record_id, flag_type, severity, description, field_name, raw_value)
+                                       VALUES ('foods', ?, 'UNVERIFIED_LANGUAGE_PREFIX', 'WARNING', ?, 'lang', ?)""",
+                                    (food_id, f'Language field contains {prefix} prefix', row.get('lang', '')))
 
                     # The package keeps language-coded aliases and diet tags in metadata columns.
                     aliases = {'English': row['name']}
