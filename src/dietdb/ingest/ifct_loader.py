@@ -196,6 +196,12 @@ class IFCTLoader:
             nutrient_map = {}
             for csv_col, info in mapping.items():
                 nutrient_map[csv_col] = self.get_or_create_nutrient(csv_col, info)
+            for child_code, parent_code in NUTRIENT_PARENTS.items():
+                if child_code in nutrient_map and parent_code in nutrient_map:
+                    self.conn.execute(
+                        "UPDATE nutrients SET parent_id = ? WHERE id = ?",
+                        (nutrient_map[parent_code], nutrient_map[child_code]),
+                    )
             
             food_count = nutrient_count = 0
             with open(self.csv_path) as f:
@@ -309,9 +315,32 @@ class IFCTLoader:
                         nutrient_count += 1
             
             self.conn.commit()
+            self._write_quality_flags(source_id)
+            self.conn.commit()
             print(f"Loaded {food_count} foods, {nutrient_count} nutrient values")
         finally:
             self.close()
+
+    def _write_quality_flags(self, source_id: int) -> None:
+        """Record source anomalies without changing source values."""
+        table = self.conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='data_quality_flags'"
+        ).fetchone()
+        if not table:
+            return
+        flags = []
+        for row in self.conn.execute(
+            """SELECT f.id FROM foods f JOIN food_groups g ON g.id=f.food_group_id
+               WHERE g.code='T'"""
+        ):
+            flags.append(("foods", row[0], "UNVERIFIED_CSV_FAT", "WARNING",
+                          "Group T CSV fat value has unverified origin", "fatce", None))
+        for flag in flags:
+            self.conn.execute(
+                """INSERT INTO data_quality_flags
+                   (table_name, record_id, flag_type, severity, description, field_name, raw_value)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""", flag
+            )
 
 
 def main():
