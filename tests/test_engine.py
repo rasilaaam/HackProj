@@ -5,6 +5,7 @@ import sqlite3
 from pathlib import Path
 
 import pytest
+import shutil
 
 from dietdb.__main__ import build_database
 from dietdb.curated.allergens import classify
@@ -83,6 +84,22 @@ def test_missing_allergy_list_is_incomplete(review_db):
 def test_production_mode_without_approved_rules_refuses(review_db):
     out = make_plan(review_db, {**fixture("ckd_g3b_t2d"), "allergy_list": []}, "production")
     assert out["status"] == "INCOMPLETE" and "no rules are loaded" in out["message"]
+
+
+def test_production_requires_approved_rules_for_active_conditions(review_db, tmp_path):
+    db = tmp_path / "approved.db"
+    shutil.copy2(review_db, db)
+    conn = sqlite3.connect(db)
+    conn.execute("UPDATE rules SET status = 'DRAFT'")
+    conn.execute("UPDATE rules SET status = 'APPROVED' WHERE slug LIKE 'htn_%'")
+    conn.commit()
+    conn.close()
+    ckd = {**fixture("ckd_g3b_t2d"), "dx_type2_diabetes": False, "allergy_list": []}
+    blocked = make_plan(str(db), ckd, "production")
+    assert blocked["status"] == "NO_APPROVED_RULES" and "dx_ckd" in blocked["message"]
+    hypertension = {**fixture("t2d_hypertension"), "dx_type2_diabetes": False, "egfr_ml_min_1_73m2": 90, "allergy_list": []}
+    allowed = make_plan(str(db), hypertension, "production")
+    assert allowed["status"] == "OK"
 
 
 def test_allergens_and_diet_pattern_are_respected(review_db):

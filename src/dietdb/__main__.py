@@ -5,7 +5,7 @@ import hashlib
 import sqlite3
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def get_db_hash(db_path: str) -> str:
@@ -84,7 +84,7 @@ def build_database(db_path: str, csv_path: str = None, output_hash: bool = False
     conn.execute("CREATE TABLE IF NOT EXISTS build_metadata (key TEXT PRIMARY KEY, value TEXT)")
     conn.execute("INSERT OR REPLACE INTO build_metadata VALUES ('build_hash',?)", (db_hash,))
     conn.execute("INSERT OR REPLACE INTO build_metadata VALUES ('build_time',?)",
-                 (datetime.utcnow().isoformat(),))
+                 (datetime.now(timezone.utc).isoformat(),))
     conn.commit()
     conn.close()
 

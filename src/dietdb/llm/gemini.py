@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -23,14 +22,14 @@ _NUMBER = re.compile(r"(?<![A-Za-z])[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
 
 
 class _GeminiREST:
-    def __init__(self, api_key: str, model: str = DEFAULT_MODEL):
+    def __init__(self, api_key: str, model: str):
         self.api_key = api_key
         self.model = model
 
     def _request(self, prompt: str) -> str:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         body = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode()
-        request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+        request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", "x-goog-api-key": self.api_key})
         with urllib.request.urlopen(request, timeout=20) as response:
             payload = json.loads(response.read().decode())
         return payload["candidates"][0]["content"]["parts"][0]["text"]
@@ -73,9 +72,14 @@ def extract_patient(report_text: str, db: str | Path = "data/app.db", model: Any
         "Never infer, calculate, normalize, or guess a value. Use these exact field names: "
         f"{json.dumps(fields)}. Omit fields that are not explicitly present. Report text follows:\n{report_text}"
     )
-    raw = client.generate_json(prompt) if hasattr(client, "generate_json") else client.generate(prompt)
+    try:
+        raw = client.generate_json(prompt) if hasattr(client, "generate_json") else client.generate(prompt)
+    except Exception as exc:
+        return {"values": {}, "missing_fields": fields, "unknown_fields": [], "rejected_fields": [],
+                "skipped": True, "error": str(exc)}
     if not isinstance(raw, dict):
-        raise ValueError("model extraction must be a JSON object")
+        return {"values": {}, "missing_fields": fields, "unknown_fields": [], "rejected_fields": [],
+                "skipped": True, "error": "model extraction must be a JSON object"}
     accepted: dict[str, Any] = {}
     unknown: list[str] = []
     rejected: list[dict[str, str]] = []
@@ -124,7 +128,10 @@ def explain(result_json: dict[str, Any], language: str = "English", model: Any |
     prompt = (f"Explain this plan result in plain English{(' and Hindi' if language.lower() == 'hindi' else '')}. "
               "Use only numbers and rule rationale text present in the JSON. Do not add medical advice. "
               "Return prose only. PLAN RESULT JSON:\n" + payload)
-    reply = client.generate_text(prompt) if hasattr(client, "generate_text") else client.generate(prompt)
+    try:
+        reply = client.generate_text(prompt) if hasattr(client, "generate_text") else client.generate(prompt)
+    except Exception:
+        return fallback
     allowed = _numbers(result_json)
     for token in _NUMBER.findall(reply):
         number = float(token)

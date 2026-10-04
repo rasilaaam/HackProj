@@ -49,11 +49,17 @@ def intake(db: str) -> dict:
 
 def main() -> None:
     st.set_page_config(page_title="DietDB", layout="wide")
-    st.warning("Draft rules are unreviewed and this is not medical advice. Plans require clinician review.")
     db = prepare_database()
+    with connect_readonly(db) as conn:
+        approved_count = conn.execute("SELECT count(*) FROM rules WHERE status = 'APPROVED'").fetchone()[0]
+    if approved_count:
+        st.info("Approved rules are loaded. This is not medical advice.")
+    else:
+        st.warning("Draft rules are unreviewed and this is not medical advice. Plans require clinician review.")
     page = st.sidebar.radio("Page", ["Patient intake", "Plan", "Explore foods"])
     if page == "Patient intake":
         st.title("Patient intake")
+        st.warning("Report text is sent to Google's Gemini API. On the free tier Google may use it to improve its products and human reviewers may read it. Do not paste identifying data.")
         report = st.text_area("Paste a lab report for optional field extraction", key="lab_report")
         if st.button("Extract fields from report"):
             extracted = extract_patient(report, db)
@@ -72,13 +78,16 @@ def main() -> None:
             st.session_state.page = "Plan"
             st.rerun()
     elif page == "Plan":
-        st.title("Draft plan")
+        with connect_readonly(db) as conn:
+            approved_count = conn.execute("SELECT count(*) FROM rules WHERE status = 'APPROVED'").fetchone()[0]
+        rules_mode = "production" if approved_count else "draft-review"
+        st.title("Plan")
         values = st.session_state.get("patient")
         if not values:
             st.info("Enter patient information first.")
             return
         try:
-            result = make_plan(db, values, "draft-review")
+            result = make_plan(db, values, rules_mode)
             st.session_state.plan_result = result
             st.warning(result.get("banner") or "RULES ARE UNREVIEWED DRAFTS: not clinical advice")
             st.subheader(f"Status: {result['status']}")
@@ -94,6 +103,8 @@ def main() -> None:
             st.json({k: result.get(k) for k in ("assumptions", "advisories", "diagnostics")})
             for rule in result.get("rules_applied", []):
                 st.caption(f"{rule['slug']} ({rule['status']}): {rule['rationale']} [{rule['source_locator']}]")
+                if rule.get("status") == "APPROVED":
+                    st.caption(f"Rules reviewed by {rule.get('reviewed_by', 'unlisted reviewer')} on {rule.get('reviewed_at', 'unlisted date')}")
             if st.button("Explain this result"):
                 st.write(explain(result, language="English"))
             st.download_button("Download JSON", json.dumps(result, indent=2, default=list), "dietdb-plan.json", "application/json")

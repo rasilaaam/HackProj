@@ -13,15 +13,26 @@ from dietdb.engine.verifier import verify
 DEFAULT_TEMPLATE = Path(__file__).resolve().parents[3] / "data/templates/meal_templates.json"
 COMMON_FOODS = Path(__file__).resolve().parents[3] / "data/curated/common_foods.json"
 BANNERS = {"draft-review": "RULES ARE UNREVIEWED DRAFTS: not clinical advice",
-           "test": "TEST FIXTURE RULES: not medical"}
+           "test": "TEST FIXTURE RULES: not medical",
+           "production": "Rules reviewed and approved; this is not medical advice"}
+
+
+def _references_variable(expression: Any, variable: str) -> bool:
+    if not isinstance(expression, dict):
+        return False
+    if expression.get("var") == variable:
+        return expression.get("op") == "==" and expression.get("value") is True
+    if "not" in expression:
+        return _references_variable(expression["not"], variable)
+    return any(_references_variable(child, variable) for key in ("and", "or") for child in expression.get(key, []))
 
 
 def _rule_info(db: str, slugs: list[str]) -> list[dict[str, Any]]:
     conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
     out = []
     for slug in sorted(set(slugs)):
-        r = conn.execute("SELECT slug, name, enforcement, tier, status, rationale, source_locator, evidence_grade FROM rules WHERE slug = ?", (slug,)).fetchone()
-        if r: out.append(dict(zip(("slug", "name", "enforcement", "tier", "status", "rationale", "source_locator", "evidence_grade"), r)))
+        r = conn.execute("SELECT slug, name, enforcement, tier, status, rationale, source_locator, evidence_grade, reviewed_by, reviewed_at FROM rules WHERE slug = ?", (slug,)).fetchone()
+        if r: out.append(dict(zip(("slug", "name", "enforcement", "tier", "status", "rationale", "source_locator", "evidence_grade", "reviewed_by", "reviewed_at"), r)))
     conn.close()
     return out
 
@@ -62,6 +73,15 @@ def make_plan(db: str, values: dict[str, Any], rules_mode: str = "production", t
     conn.close()
     if n_rules == 0:
         return {**result, "status": "INCOMPLETE", "message": f"no rules are loaded for mode '{rules_mode}'; run load-rules first"}
+    if rules_mode == "production":
+        active_conditions = sorted(name for name, value in values.items() if name.startswith("dx_") and value is True)
+        with sqlite3.connect(f"file:{db}?mode=ro", uri=True) as guard_conn:
+            approved = [json.loads(row[0]) for row in guard_conn.execute("SELECT applies_when FROM rules WHERE status = 'APPROVED'")]
+        missing_conditions = [name for name in active_conditions
+                              if not any(_references_variable(expression, name) for expression in approved)]
+        if missing_conditions:
+            return {**result, "status": "NO_APPROVED_RULES", "conditions": missing_conditions,
+                    "message": "No APPROVED rules cover active condition(s): " + ", ".join(missing_conditions)}
     try:
         allergens = allergen_codes(values["allergy_list"])
         resolved = resolve(patient, db, rules_mode)

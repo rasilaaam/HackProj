@@ -19,6 +19,14 @@ class FakeModel:
         return self.text
 
 
+class RaisingModel:
+    def generate_json(self, prompt):
+        raise TimeoutError("fake timeout")
+
+    def generate_text(self, prompt):
+        raise OSError("fake network error")
+
+
 @pytest.fixture
 def patient_db(tmp_path):
     db = tmp_path / "llm.db"
@@ -47,3 +55,10 @@ def test_explanation_discards_invented_number():
     payload = {"status": "OK", "energy_total_kcal": 1200, "rules_applied": [{"rationale": "Keep energy near the target."}]}
     result = explain(payload, model=FakeModel(text="The plan provides 1200 kcal and 9999 mg."))
     assert result == "Keep energy near the target."
+
+
+def test_model_errors_fail_closed(patient_db):
+    extracted = extract_patient("report", patient_db, RaisingModel())
+    assert extracted["skipped"] is True and extracted["error"] == "fake timeout"
+    payload = {"rules_applied": [{"rationale": "Use the supplied plan bounds."}]}
+    assert explain(payload, model=RaisingModel()) == "Use the supplied plan bounds."
